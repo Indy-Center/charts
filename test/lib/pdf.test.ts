@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createDocCache, getDocument } from '$lib/pdf';
+import { createDocCache, getDocument, proxyPdfUrl } from '$lib/pdf';
 
 describe('createDocCache + getDocument', () => {
   it('caches results from the loader', async () => {
@@ -32,5 +32,21 @@ describe('createDocCache + getDocument', () => {
       url: 'https://example/a.pdf'
     });
     expect(attempts).toBe(2);
+  });
+});
+
+describe('proxyPdfUrl', () => {
+  it('rewrites charts-v2.aviationapi.com URLs through the proxy', () => {
+    const result = proxyPdfUrl('https://charts-v2.aviationapi.com/260416/00203ad.pdf');
+    expect(result).toBe('/api/pdf?url=https%3A%2F%2Fcharts-v2.aviationapi.com%2F260416%2F00203ad.pdf');
+  });
+
+  it('passes through other hosts unchanged', () => {
+    const url = 'https://example.com/foo.pdf';
+    expect(proxyPdfUrl(url)).toBe(url);
+  });
+
+  it('passes through non-URLs unchanged', () => {
+    expect(proxyPdfUrl('relative/path.pdf')).toBe('relative/path.pdf');
   });
 });

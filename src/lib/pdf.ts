@@ -3,6 +3,24 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 export type DocCache = Map<string, PDFDocumentProxy>;
 export type DocLoader = (url: string) => Promise<PDFDocumentProxy>;
 
+const PROXIED_HOSTS = new Set(['charts-v2.aviationapi.com']);
+
+/**
+ * Rewrites cross-origin PDF URLs to go through our /api/pdf proxy
+ * because the upstream CDN doesn't send CORS headers.
+ */
+export function proxyPdfUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (PROXIED_HOSTS.has(parsed.host)) {
+      return `/api/pdf?url=${encodeURIComponent(url)}`;
+    }
+  } catch {
+    // not an absolute URL — leave it alone
+  }
+  return url;
+}
+
 export function createDocCache(): DocCache {
   return new Map();
 }
@@ -28,6 +46,6 @@ export async function loadPdfDocument(url: string): Promise<PDFDocumentProxy> {
   // Worker is bundled by Vite via ?url import.
   const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-  const task = pdfjs.getDocument({ url, withCredentials: false });
+  const task = pdfjs.getDocument({ url: proxyPdfUrl(url), withCredentials: false });
   return task.promise;
 }
