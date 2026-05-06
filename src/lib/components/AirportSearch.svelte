@@ -267,7 +267,7 @@
 			use:melt={$menu}
 			class="absolute top-full right-0 left-0 z-50 mt-1 max-h-[60vh] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 text-sm shadow-lg"
 		>
-			{#each rows as row (row.kind === 'airport' ? `a:${row.id}` : `c:${row.chart.pdf_url}`)}
+			{#each rows as row (row.kind === 'airport' ? `a:${row.id}` : `c:${row.chart.chart_name}:${row.chart.pdf_url}`)}
 				<li
 					use:melt={$option({
 						value: row,
