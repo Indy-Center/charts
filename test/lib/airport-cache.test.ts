@@ -29,4 +29,13 @@ describe('airportCache', () => {
     airportCache.set(sample);
     expect(airportCache.get('ind')).toEqual(sample);
   });
+
+  it('also stores under icao_ident when present', () => {
+    airportCache.set({
+      airport: { country: 'USA', faa_ident: 'IND', icao_ident: 'KIND', is_military: false },
+      chartsByGroup: { airport_diagram: [], general: [], approach: [], departure: [], arrival: [] }
+    });
+    expect(airportCache.get('IND')).toBeDefined();
+    expect(airportCache.get('KIND')).toBeDefined();
+  });
 });

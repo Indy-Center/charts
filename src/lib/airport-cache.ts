@@ -7,7 +7,11 @@ export const airportCache = {
     return store.get(id.toUpperCase());
   },
   set(data: AirportData): void {
-    store.set(data.airport.faa_ident.toUpperCase(), data);
+    const faa = data.airport.faa_ident.toUpperCase();
+    store.set(faa, data);
+    if (data.airport.icao_ident) {
+      store.set(data.airport.icao_ident.toUpperCase(), data);
+    }
   },
   has(id: string): boolean {
     return store.has(id.toUpperCase());
