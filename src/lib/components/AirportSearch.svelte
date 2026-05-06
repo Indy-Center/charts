@@ -125,30 +125,28 @@
 	{/if}
 </div>
 
-{#if $open}
-	<ul
-		use:melt={$menu}
-		class="z-50 mt-1 max-h-[50vh] overflow-y-auto rounded border border-zinc-800 bg-zinc-900 text-sm shadow-lg"
-	>
-		{#each rows as row (row.kind === 'airport' ? `a:${row.id}` : `c:${row.chart.pdf_url}`)}
-			<li
-				use:melt={$option({
-					value: row,
-					label: row.kind === 'airport' ? row.label : row.chart.chart_name
-				})}
-				class="cursor-pointer px-2 py-1 text-zinc-200 data-[highlighted]:bg-sky-500/15 data-[highlighted]:text-sky-100"
-			>
-				{#if row.kind === 'airport'}
-					<span class="font-medium">{row.label}</span>
-					{#if fetched && row.id === fetched.airport.faa_ident && fetched.airport.airport_name}
-						<span class="ml-2 text-xs text-zinc-500">{fetched.airport.airport_name}</span>
-					{/if}
-				{:else}
-					<span>{row.chart.chart_name}</span>
+<ul
+	use:melt={$menu}
+	class="z-50 mt-1 max-h-[50vh] overflow-y-auto rounded border border-zinc-800 bg-zinc-900 text-sm shadow-lg data-[state=closed]:hidden"
+>
+	{#each rows as row (row.kind === 'airport' ? `a:${row.id}` : `c:${row.chart.pdf_url}`)}
+		<li
+			use:melt={$option({
+				value: row,
+				label: row.kind === 'airport' ? row.label : row.chart.chart_name
+			})}
+			class="cursor-pointer px-2 py-1 text-zinc-200 data-[highlighted]:bg-sky-500/15 data-[highlighted]:text-sky-100"
+		>
+			{#if row.kind === 'airport'}
+				<span class="font-medium">{row.label}</span>
+				{#if fetched && row.id === fetched.airport.faa_ident && fetched.airport.airport_name}
+					<span class="ml-2 text-xs text-zinc-500">{fetched.airport.airport_name}</span>
 				{/if}
-			</li>
-		{:else}
-			<li class="px-2 py-1 text-xs text-zinc-500">No matches</li>
-		{/each}
-	</ul>
-{/if}
+			{:else}
+				<span>{row.chart.chart_name}</span>
+			{/if}
+		</li>
+	{:else}
+		<li class="px-2 py-1 text-xs text-zinc-500">No matches</li>
+	{/each}
+</ul>
