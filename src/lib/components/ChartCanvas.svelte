@@ -65,8 +65,19 @@
 		onChange({ ...view, ...p });
 	}
 
+	let activeRenderTask: { cancel: () => void; promise: Promise<void> } | null = null;
+
 	async function renderNow() {
 		if (!canvasEl) return;
+		// Cancel any in-flight PDF.js render before reusing the canvas.
+		if (activeRenderTask) {
+			try {
+				activeRenderTask.cancel();
+			} catch {
+				// already settled
+			}
+			activeRenderTask = null;
+		}
 		const myToken = ++renderToken;
 		error = null;
 		loading = true;
@@ -98,7 +109,18 @@
 			if (!ctx) throw new Error('2d context unavailable');
 			ctx.fillStyle = '#ffffff';
 			ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
-			await page.render({ canvas: canvasEl, canvasContext: ctx, viewport }).promise;
+			const task = page.render({ canvas: canvasEl, canvasContext: ctx, viewport });
+			activeRenderTask = task;
+			try {
+				await task.promise;
+			} catch (err) {
+				if ((err as { name?: string })?.name === 'RenderingCancelledException') {
+					return;
+				}
+				throw err;
+			} finally {
+				if (activeRenderTask === task) activeRenderTask = null;
+			}
 			if (myToken !== renderToken) return;
 			if (view.invert) applyInvert(ctx, canvasEl.width, canvasEl.height);
 			loading = false;
