@@ -62,11 +62,7 @@
 </svelte:head>
 
 {#key data.airport.airport.faa_ident}
-  <ChartViewer
-    airport={data.airport}
-    selected={data.selected}
-    chartSlugInUrl={!!page.params.chart}
-  />
+  <ChartViewer airport={data.airport} selected={data.selected} />
 {/key}
 
 {#if data.slugError && showSlugError}

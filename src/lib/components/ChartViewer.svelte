@@ -15,12 +15,10 @@
 
   let {
     airport,
-    selected,
-    chartSlugInUrl = false
+    selected
   }: {
     airport: AirportData;
     selected: Chart | null;
-    chartSlugInUrl?: boolean;
   } = $props();
 
   const parsedDocs = new Map<string, PDFDocumentProxy>();
@@ -87,7 +85,7 @@
   {/if}
 
   <div class="pointer-events-none absolute inset-0">
-    <OverlayCard title={overlayTitle} position="top-left" defaultCollapsed={chartSlugInUrl}>
+    <OverlayCard title={overlayTitle} position="top-left">
       {#snippet icon()}<IconSearch class="text-lg" />{/snippet}
       <div class="flex max-h-[70vh] w-72 flex-col gap-3">
         <AirportSearch onSelectAirport={pickAirport} onSelectChart={(_id, c) => pickChart(c)} />
