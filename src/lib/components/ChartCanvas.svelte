@@ -92,7 +92,7 @@
 	function onWheel(e: WheelEvent) {
 		e.preventDefault();
 		const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-		patch({ zoom: clamp(view.zoom * factor, 0.5, 4) });
+		patch({ zoom: clamp(view.zoom * factor, 1, 4) });
 	}
 
 	// Drag = pan.
@@ -120,7 +120,7 @@
 		dragging = false;
 	}
 	function onDblClick() {
-		patch({ zoom: clamp(view.zoom * 1.5, 0.5, 4) });
+		patch({ zoom: clamp(view.zoom * 1.5, 1, 4) });
 	}
 
 	function clamp(n: number, min: number, max: number) {

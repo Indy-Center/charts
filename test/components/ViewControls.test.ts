@@ -14,14 +14,21 @@ describe('ViewControls', () => {
 		const onChange = vi.fn();
 		render(ViewControls, { view: { ...DEFAULT_VIEW_STATE }, onChange });
 		await fireEvent.click(screen.getByRole('button', { name: /zoom in/i }));
-		expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 1.25 }));
+		expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 1.5 }));
 	});
 
-	it('emits zoom-out', async () => {
+	it('emits zoom-out clamped at 1', async () => {
 		const onChange = vi.fn();
 		render(ViewControls, { view: { ...DEFAULT_VIEW_STATE }, onChange });
 		await fireEvent.click(screen.getByRole('button', { name: /zoom out/i }));
-		expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 0.8 }));
+		expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 1 }));
+	});
+
+	it('cannot zoom below 1', async () => {
+		const onChange = vi.fn();
+		render(ViewControls, { view: { ...DEFAULT_VIEW_STATE, zoom: 1 }, onChange });
+		await fireEvent.click(screen.getByRole('button', { name: /zoom out/i }));
+		expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 1 }));
 	});
 
 	it('rotates by 90 deg', async () => {

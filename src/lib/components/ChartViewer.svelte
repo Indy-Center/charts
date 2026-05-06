@@ -33,6 +33,18 @@
     collapsedDefault = window.matchMedia('(max-width: 767px)').matches;
   });
 
+  function titleCase(s: string): string {
+    return s
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  const overlayTitle = $derived.by(() => {
+    const code = airport.airport.faa_ident;
+    const name = airport.airport.airport_name;
+    return name ? `${code} · ${titleCase(name)}` : code;
+  });
+
   const view = $derived.by((): ViewState => {
     if (!selected) return { ...DEFAULT_VIEW_STATE };
     return viewStates.get(selected.pdf_url) ?? { ...DEFAULT_VIEW_STATE };
@@ -74,9 +86,9 @@
   {/if}
 
   <div class="pointer-events-none absolute inset-0">
-    <OverlayCard title="Charts" position="top-left" defaultCollapsed={collapsedDefault}>
+    <OverlayCard title={overlayTitle} position="top-left" defaultCollapsed={collapsedDefault}>
       {#snippet icon()}<IconSearch class="text-lg" />{/snippet}
-      <div class="flex w-72 flex-col gap-3">
+      <div class="flex max-h-[70vh] w-72 flex-col gap-3">
         <AirportSearch onSelectAirport={pickAirport} onSelectChart={(_id, c) => pickChart(c)} />
         <ChartList
           byGroup={airport.chartsByGroup}
@@ -87,7 +99,7 @@
     </OverlayCard>
 
     {#if selected}
-      <OverlayCard title="View" position="top-right" defaultCollapsed={collapsedDefault}>
+      <OverlayCard title="View" position="top-right" defaultCollapsed={true}>
         {#snippet icon()}<IconTune class="text-lg" />{/snippet}
         <ViewControls {view} onChange={onCanvasChange} />
       </OverlayCard>

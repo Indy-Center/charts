@@ -19,7 +19,7 @@
 		patch({ zoom: Math.min(4, +(view.zoom * 1.25).toFixed(3)) });
 	}
 	function zoomOut() {
-		patch({ zoom: Math.max(0.5, +(view.zoom * 0.8).toFixed(3)) });
+		patch({ zoom: Math.max(1, +(view.zoom * 0.8).toFixed(3)) });
 	}
 	function rotate() {
 		const i = ROTATIONS.indexOf(view.rotation);
