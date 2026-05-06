@@ -10,7 +10,7 @@
   import ChartMeta from './ChartMeta.svelte';
   import ViewControls from './ViewControls.svelte';
   import AirportSearch from './AirportSearch.svelte';
-  import IconSearch from '~icons/mdi/magnify';
+  import IconList from '~icons/mdi/format-list-bulleted';
   import IconHome from '~icons/mdi/home-outline';
 
   let {
@@ -85,9 +85,8 @@
 
   <div class="pointer-events-none absolute inset-0">
     <OverlayCard title={overlayTitle} position="top-left">
-      {#snippet icon()}<IconSearch class="text-lg" />{/snippet}
-      <div class="flex max-h-[70vh] w-72 flex-col gap-3">
-        <AirportSearch onSelectAirport={pickAirport} onSelectChart={(id, c) => pickChart(c, id)} />
+      {#snippet icon()}<IconList class="text-lg" />{/snippet}
+      <div class="flex max-h-[70vh] w-72 flex-col">
         <ChartList
           byGroup={airport.chartsByGroup}
           selectedPdfUrl={selected?.pdf_url}
@@ -95,6 +94,12 @@
         />
       </div>
     </OverlayCard>
+
+    <div
+      class="pointer-events-auto absolute top-3 left-1/2 w-full max-w-md -translate-x-1/2 px-3 sm:px-0"
+    >
+      <AirportSearch onSelectAirport={pickAirport} onSelectChart={(id, c) => pickChart(c, id)} />
+    </div>
 
     <a
       href="/"
