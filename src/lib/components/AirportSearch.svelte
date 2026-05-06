@@ -135,33 +135,41 @@
 		inputValue.set('');
 	});
 
-	function commit() {
-		const { id, afterSlash } = parseInputValue($inputValue);
+	function pickRow(r: Row) {
+		if (r.kind === 'airport') onSelectAirport(r.id);
+		else onSelectChart(r.airportId, r.chart);
+		inputValue.set('');
+	}
 
-		// If the dropdown narrowed to exactly one row, take it.
+	function commit() {
+		// 1. If a dropdown item is keyboard-highlighted, take that one.
+		const optionEls = document.querySelectorAll('[role="option"]');
+		for (let i = 0; i < optionEls.length; i++) {
+			if (optionEls[i].hasAttribute('data-highlighted') && i < rows.length) {
+				pickRow(rows[i]);
+				return;
+			}
+		}
+
+		// 2. If the dropdown narrowed to exactly one row, take it.
 		if (rows.length === 1) {
-			const r = rows[0];
-			if (r.kind === 'airport') onSelectAirport(r.id);
-			else onSelectChart(r.airportId, r.chart);
-			inputValue.set('');
+			pickRow(rows[0]);
 			return;
 		}
 
-		// Otherwise, fall back to the airport root if the typed id is plausible.
+		// 3. Fall back to the airport root if the typed id is plausible.
+		const { id } = parseInputValue($inputValue);
 		const norm = id ? normalizeForApi(id) : null;
 		if (norm) {
 			onSelectAirport(id.toUpperCase());
 			inputValue.set('');
-			return;
 		}
 	}
 
 	function onInputKeyDown(e: KeyboardEvent) {
 		if (e.key !== 'Enter') return;
-		// If a dropdown item is keyboard-highlighted, defer to Melt's selection logic.
-		const highlighted = document.querySelector('[role="option"][data-highlighted]');
-		if (highlighted) return;
 		e.preventDefault();
+		e.stopPropagation();
 		commit();
 	}
 </script>
