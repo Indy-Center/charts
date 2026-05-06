@@ -28,21 +28,27 @@
   // - if no slug was in the URL, leave it bare (don't auto-append default chart's slug)
   // - if the slug 404'd, drop it (default chart is rendering, toast tells the user)
   // - if the slug resolved, normalize to its canonical form
+  //
+  // The setTimeout defers past initial hydration: replaceState() throws
+  // "router not initialized" when called synchronously inside the very first
+  // afterNavigate callback (during _hydrate).
   afterNavigate(() => {
-    const expectedAirport = data.airport.airport.faa_ident.toLowerCase();
-    const slugProvided = !!page.params.chart;
-    const hadSlugError = !!data.slugError;
+    setTimeout(() => {
+      const expectedAirport = data.airport.airport.faa_ident.toLowerCase();
+      const slugProvided = !!page.params.chart;
+      const hadSlugError = !!data.slugError;
 
-    let wantPath: string;
-    if (!slugProvided || hadSlugError || !data.selected) {
-      wantPath = `/${expectedAirport}`;
-    } else {
-      wantPath = `/${expectedAirport}/${chartToSlug(data.selected.chart_name)}`;
-    }
+      let wantPath: string;
+      if (!slugProvided || hadSlugError || !data.selected) {
+        wantPath = `/${expectedAirport}`;
+      } else {
+        wantPath = `/${expectedAirport}/${chartToSlug(data.selected.chart_name)}`;
+      }
 
-    if (page.url.pathname !== wantPath) {
-      replaceState(wantPath, page.state);
-    }
+      if (page.url.pathname !== wantPath) {
+        replaceState(wantPath, page.state);
+      }
+    }, 0);
   });
 
   let pageTitle = $derived.by(() => {
