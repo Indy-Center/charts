@@ -5,8 +5,8 @@ html, body {
 }
 
 body {
-	background-color: theme(colors.zinc.950);
-	color: theme(colors.zinc.100);
+	background-color: var(--color-zinc-950);
+	color: var(--color-zinc-100);
 	-webkit-font-smoothing: antialiased;
 }
 
