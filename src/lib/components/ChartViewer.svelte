@@ -12,6 +12,7 @@
   import ViewControls from './ViewControls.svelte';
   import AirportSearch from './AirportSearch.svelte';
   import IconSearch from '~icons/mdi/magnify';
+  import IconHome from '~icons/mdi/home-outline';
 
   let {
     airport,
@@ -97,6 +98,15 @@
       </div>
     </OverlayCard>
 
+    <a
+      href="/"
+      aria-label="Back to home"
+      class="pointer-events-auto absolute top-3 right-3 flex h-10 cursor-pointer items-center gap-2 rounded-full border border-zinc-800/60 bg-zinc-900/85 px-3 text-xs font-medium tracking-wider text-zinc-300 uppercase backdrop-blur-md transition-colors hover:text-sky-300"
+    >
+      <IconHome class="text-base" />
+      <span class="hidden sm:inline">Home</span>
+    </a>
+
     {#if selected}
       <div class="pointer-events-auto absolute right-3 bottom-3">
         <ViewControls {view} onChange={onCanvasChange} />
@@ -109,5 +119,11 @@
         {totalPages}
       />
     {/if}
+
+    <p
+      class="pointer-events-none absolute bottom-3 left-3 max-w-[18rem] text-[10px] leading-snug text-zinc-600"
+    >
+      Not affiliated with the FAA. Approved only for use on the VATSIM network.
+    </p>
   </div>
 </div>
