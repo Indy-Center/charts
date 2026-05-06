@@ -8,6 +8,9 @@ export default defineConfig({
 		projects: [
 			{
 				extends: true,
+				resolve: {
+					conditions: ['browser']
+				},
 				test: {
 					name: 'components',
 					include: ['test/components/**/*.test.ts'],
