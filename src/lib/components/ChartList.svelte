@@ -4,11 +4,11 @@
 
 	let {
 		byGroup,
-		selectedPdfUrl,
+		selected,
 		onPick
 	}: {
 		byGroup: ChartsByGroup;
-		selectedPdfUrl: string | undefined;
+		selected: Chart | null | undefined;
 		onPick: (chart: Chart) => void;
 	} = $props();
 </script>
@@ -22,7 +22,10 @@
 				</h3>
 				<ul class="flex flex-col gap-0.5">
 					{#each byGroup[group] as chart (`${chart.chart_name}:${chart.pdf_url}`)}
-						{@const isSelected = chart.pdf_url === selectedPdfUrl}
+						{@const isSelected =
+							!!selected &&
+							chart.chart_name === selected.chart_name &&
+							chart.pdf_url === selected.pdf_url}
 						<li>
 							<button
 								type="button"

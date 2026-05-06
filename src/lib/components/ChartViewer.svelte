@@ -92,11 +92,7 @@
       <OverlayCard title={overlayTitle}>
         {#snippet icon()}<IconList class="text-lg" />{/snippet}
         <div class="flex max-h-[60vh] flex-col">
-          <ChartList
-            byGroup={airport.chartsByGroup}
-            selectedPdfUrl={selected?.pdf_url}
-            onPick={pickChart}
-          />
+          <ChartList byGroup={airport.chartsByGroup} {selected} onPick={pickChart} />
         </div>
       </OverlayCard>
     </div>
