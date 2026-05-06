@@ -10,5 +10,10 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"services": [
+		// Identity worker binding is declared but unused in v1.
+		// Wire `getCurrentUser` (src/lib/server/identity.ts) through this when integrating.
+		{ "binding": "IDENTITY", "service": "identity" }
+	]
 }
