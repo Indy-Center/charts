@@ -94,7 +94,7 @@
 			const viewport = page.getViewport({ scale, rotation: view.rotation });
 			canvasEl.width = Math.ceil(viewport.width);
 			canvasEl.height = Math.ceil(viewport.height);
-			const ctx = canvasEl.getContext('2d');
+			const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
 			if (!ctx) throw new Error('2d context unavailable');
 			ctx.fillStyle = '#ffffff';
 			ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
