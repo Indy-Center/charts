@@ -96,7 +96,7 @@
     </OverlayCard>
 
     <div
-      class="pointer-events-auto absolute top-3 left-1/2 w-full max-w-md -translate-x-1/2 px-3 sm:px-0"
+      class="pointer-events-auto absolute top-3 left-1/2 w-full max-w-xs -translate-x-1/2 px-3 sm:px-0"
     >
       <AirportSearch onSelectAirport={pickAirport} onSelectChart={(id, c) => pickChart(c, id)} />
     </div>
