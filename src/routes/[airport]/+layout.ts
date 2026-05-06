@@ -16,8 +16,13 @@ export const load: LayoutLoad = async ({ params, fetch }) => {
   }
 
   const resp = await fetch(`/api/charts/${encodeURIComponent(id)}`);
-  if (resp.status === 400) error(400, 'Invalid airport identifier');
-  if (!resp.ok) error(503, 'Charts service is temporarily unavailable');
+  if (resp.status === 400) error(400, `"${id.toUpperCase()}" is not a valid airport identifier.`);
+  if (!resp.ok) {
+    error(
+      404,
+      `No charts available for "${id.toUpperCase()}". The airport may not exist or the charts service is temporarily unavailable.`
+    );
+  }
 
   const data = (await resp.json()) as AirportData;
   if (browser) airportCache.set(data);

@@ -42,8 +42,8 @@ describe('airport layout load', () => {
     await expect(load(makeEvent('KIND', f))).rejects.toMatchObject({ status: 400 });
   });
 
-  it('throws 503 when endpoint returns 502', async () => {
+  it('throws 404 when endpoint returns 502 (likely unknown airport)', async () => {
     const f = vi.fn(async () => new Response('{"error":"upstream_unavailable"}', { status: 502 }));
-    await expect(load(makeEvent('KIND', f))).rejects.toMatchObject({ status: 503 });
+    await expect(load(makeEvent('KFOO', f))).rejects.toMatchObject({ status: 404 });
   });
 });
