@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { replaceState } from '$app/navigation';
+  import { afterNavigate, replaceState } from '$app/navigation';
   import ChartViewer from '$lib/components/ChartViewer.svelte';
   import { displayForm } from '$lib/airport-id';
   import { chartToSlug } from '$lib/slug';
@@ -24,22 +23,25 @@
     };
   });
 
-  // Canonicalize URL airport segment to lowercase FAA form once on mount.
-  onMount(() => {
-    const expected = data.airport.airport.faa_ident.toLowerCase();
-    const current = (page.params.airport ?? '').toLowerCase();
-    if (current !== expected) {
-      const tail = data.selected ? `/${chartToSlug(data.selected.chart_name)}` : '';
-      replaceState(`/${expected}${tail}`, page.state);
-    }
-  });
+  // Canonicalize URL after each navigation settles.
+  // - airport segment is lowercased
+  // - if no slug was in the URL, leave it bare (don't auto-append default chart's slug)
+  // - if the slug 404'd, drop it (default chart is rendering, toast tells the user)
+  // - if the slug resolved, normalize to its canonical form
+  afterNavigate(() => {
+    const expectedAirport = data.airport.airport.faa_ident.toLowerCase();
+    const slugProvided = !!page.params.chart;
+    const hadSlugError = !!data.slugError;
 
-  // If a slug was provided but didn't resolve, drop it from the URL —
-  // the default chart is already rendering, the toast tells the user why.
-  $effect(() => {
-    if (data.slugError) {
-      const expected = data.airport.airport.faa_ident.toLowerCase();
-      replaceState(`/${expected}`, page.state);
+    let wantPath: string;
+    if (!slugProvided || hadSlugError || !data.selected) {
+      wantPath = `/${expectedAirport}`;
+    } else {
+      wantPath = `/${expectedAirport}/${chartToSlug(data.selected.chart_name)}`;
+    }
+
+    if (page.url.pathname !== wantPath) {
+      replaceState(wantPath, page.state);
     }
   });
 
@@ -54,7 +56,11 @@
 </svelte:head>
 
 {#key data.airport.airport.faa_ident}
-  <ChartViewer airport={data.airport} selected={data.selected} />
+  <ChartViewer
+    airport={data.airport}
+    selected={data.selected}
+    chartSlugInUrl={!!page.params.chart}
+  />
 {/key}
 
 {#if data.slugError && showSlugError}
