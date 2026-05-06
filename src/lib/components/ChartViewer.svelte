@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { SvelteMap } from 'svelte/reactivity';
   import type { AirportData, Chart, ViewState } from '$lib/types';
   import { DEFAULT_VIEW_STATE } from '$lib/types';
   import { chartToSlug } from '$lib/slug';
@@ -22,9 +24,14 @@
   } = $props();
 
   const parsedDocs = new Map<string, PDFDocumentProxy>();
-  const viewStates = new Map<string, ViewState>();
+  const viewStates = new SvelteMap<string, ViewState>();
 
   let totalPages = $state(1);
+  let collapsedDefault = $state(false);
+
+  onMount(() => {
+    collapsedDefault = window.matchMedia('(max-width: 767px)').matches;
+  });
 
   const view = $derived.by((): ViewState => {
     if (!selected) return { ...DEFAULT_VIEW_STATE };
@@ -67,7 +74,7 @@
   {/if}
 
   <div class="pointer-events-none absolute inset-0">
-    <OverlayCard title="Charts" position="top-left">
+    <OverlayCard title="Charts" position="top-left" defaultCollapsed={collapsedDefault}>
       {#snippet icon()}<IconSearch class="text-lg" />{/snippet}
       <div class="flex w-72 flex-col gap-3">
         <AirportSearch onSelectAirport={pickAirport} onSelectChart={(_id, c) => pickChart(c)} />
@@ -80,7 +87,7 @@
     </OverlayCard>
 
     {#if selected}
-      <OverlayCard title="View" position="top-right">
+      <OverlayCard title="View" position="top-right" defaultCollapsed={collapsedDefault}>
         {#snippet icon()}<IconTune class="text-lg" />{/snippet}
         <ViewControls {view} onChange={onCanvasChange} />
       </OverlayCard>
