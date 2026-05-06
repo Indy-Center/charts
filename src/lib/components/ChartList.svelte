@@ -29,8 +29,10 @@
 								aria-current={isSelected ? 'true' : undefined}
 								onclick={() => onPick(chart)}
 								class={[
-									'flex w-full items-center justify-between gap-2 rounded px-2 py-1 text-left',
-									isSelected ? 'bg-sky-500/15 text-sky-100' : 'text-zinc-200 hover:bg-zinc-800/70'
+									'flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2 py-1 text-left transition-colors',
+									isSelected
+										? 'bg-sky-500/15 text-sky-100'
+										: 'text-zinc-200 hover:bg-zinc-800/70 hover:text-zinc-50'
 								]}
 							>
 								<span class="truncate">{chart.chart_name}</span>

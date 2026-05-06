@@ -35,7 +35,7 @@
 			type="button"
 			aria-label={`Expand ${title}`}
 			onclick={() => (collapsed = false)}
-			class="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800/60 bg-zinc-900/85 text-zinc-200 backdrop-blur-md hover:bg-zinc-800/85"
+			class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-zinc-800/60 bg-zinc-900/85 text-zinc-200 backdrop-blur-md transition-colors hover:bg-zinc-800/85 hover:text-sky-300"
 		>
 			{@render icon()}
 		</button>
@@ -50,7 +50,7 @@
 					type="button"
 					aria-label={`Collapse ${title}`}
 					onclick={() => (collapsed = true)}
-					class="text-zinc-500 hover:text-zinc-200"
+					class="cursor-pointer rounded px-1 leading-none text-zinc-500 transition-colors hover:text-zinc-200"
 				>
 					<span aria-hidden="true">−</span>
 				</button>

@@ -40,7 +40,7 @@
 	<button
 		type="button"
 		aria-label="Zoom out"
-		class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-800/70"
+		class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-zinc-800/70 hover:text-zinc-100"
 		onclick={zoomOut}
 	>
 		<IconZoomOut />
@@ -48,7 +48,7 @@
 	<button
 		type="button"
 		aria-label="Zoom in"
-		class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-800/70"
+		class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-zinc-800/70 hover:text-zinc-100"
 		onclick={zoomIn}
 	>
 		<IconZoomIn />
@@ -56,7 +56,7 @@
 	<button
 		type="button"
 		aria-label="Rotate 90 degrees"
-		class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-800/70"
+		class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-zinc-800/70 hover:text-zinc-100"
 		onclick={rotate}
 	>
 		<IconRotate />
@@ -66,8 +66,8 @@
 		aria-label="Invert colors"
 		aria-pressed={view.invert}
 		class={[
-			'flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-800/70',
-			view.invert && 'text-sky-400'
+			'flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-zinc-800/70 hover:text-zinc-100',
+			view.invert && 'text-sky-400 hover:text-sky-300'
 		]}
 		onclick={toggleInvert}
 	>
