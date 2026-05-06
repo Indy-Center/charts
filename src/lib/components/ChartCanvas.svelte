@@ -4,16 +4,20 @@
 
 	let {
 		pdfUrl,
+		airportIdent,
+		chartName,
 		view,
 		onChange,
-		onPagesKnown,
+		onPageInfo,
 		docCache,
 		loader = loadPdfDocument
 	}: {
 		pdfUrl: string;
+		airportIdent: string;
+		chartName: string;
 		view: ViewState;
 		onChange: (next: ViewState) => void;
-		onPagesKnown: (totalPages: number) => void;
+		onPageInfo: (info: { current: number; total: number }) => void;
 		docCache: DocCache;
 		loader?: DocLoader;
 	} = $props();
@@ -24,6 +28,38 @@
 	let loading = $state(true);
 
 	let renderToken = 0;
+
+	const SMART_PAGE_PATTERNS = /TAKEOFF|ALTERNATE|MINIMUMS/i;
+
+	function shouldSmartDetect(name: string): boolean {
+		return SMART_PAGE_PATTERNS.test(name);
+	}
+
+	const detectedPageByUrl = new Map<string, number>();
+
+	async function detectPage(
+		doc: import('pdfjs-dist').PDFDocumentProxy,
+		ident: string,
+		url: string
+	): Promise<number> {
+		const cached = detectedPageByUrl.get(url);
+		if (cached) return cached;
+		const target = ident.toUpperCase();
+		for (let p = 1; p <= doc.numPages; p++) {
+			const page = await doc.getPage(p);
+			const text = await page.getTextContent();
+			const flat = text.items
+				.map((i) => ('str' in i ? (i as { str: string }).str : ''))
+				.join(' ')
+				.toUpperCase();
+			if (flat.includes(target)) {
+				detectedPageByUrl.set(url, p);
+				return p;
+			}
+		}
+		detectedPageByUrl.set(url, 1);
+		return 1;
+	}
 
 	function patch(p: Partial<ViewState>) {
 		onChange({ ...view, ...p });
@@ -37,8 +73,15 @@
 		try {
 			const doc = await getDocument(pdfUrl, docCache, loader);
 			if (myToken !== renderToken) return;
-			onPagesKnown(doc.numPages);
-			const page = await doc.getPage(view.page);
+
+			let pageToRender = view.page;
+			if (doc.numPages > 1 && shouldSmartDetect(chartName) && airportIdent) {
+				pageToRender = await detectPage(doc, airportIdent, pdfUrl);
+				if (myToken !== renderToken) return;
+			}
+
+			onPageInfo({ current: pageToRender, total: doc.numPages });
+			const page = await doc.getPage(pageToRender);
 			if (myToken !== renderToken) return;
 			const baseViewport = page.getViewport({ scale: 1 });
 			const containerW = containerEl?.clientWidth ?? window.innerWidth;

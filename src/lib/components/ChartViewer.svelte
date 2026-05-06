@@ -27,6 +27,7 @@
   const viewStates = new SvelteMap<string, ViewState>();
 
   let totalPages = $state(1);
+  let currentPage = $state(1);
   let collapsedDefault = $state(false);
 
   onMount(() => {
@@ -73,9 +74,14 @@
     {#key selected.pdf_url}
       <ChartCanvas
         pdfUrl={selected.pdf_url}
+        airportIdent={airport.airport.faa_ident}
+        chartName={selected.chart_name}
         {view}
         onChange={onCanvasChange}
-        onPagesKnown={(p) => (totalPages = p)}
+        onPageInfo={(info) => {
+          totalPages = info.total;
+          currentPage = info.current;
+        }}
         docCache={parsedDocs}
       />
     {/key}
@@ -107,7 +113,7 @@
       <ChartMeta
         name={selected.chart_name}
         didChange={selected.did_change}
-        page={view.page}
+        page={currentPage}
         {totalPages}
       />
     {/if}
