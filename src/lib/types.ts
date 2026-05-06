@@ -57,7 +57,7 @@ export interface ViewState {
 }
 
 export const DEFAULT_VIEW_STATE: ViewState = {
-  zoom: 1.2,
+  zoom: 1,
   panX: 0,
   panY: 0,
   rotation: 0,

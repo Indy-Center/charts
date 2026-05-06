@@ -14,7 +14,7 @@ describe('ViewControls', () => {
 		const onChange = vi.fn();
 		render(ViewControls, { view: { ...DEFAULT_VIEW_STATE }, onChange });
 		await fireEvent.click(screen.getByRole('button', { name: /zoom in/i }));
-		expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 1.5 }));
+		expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ zoom: 1.25 }));
 	});
 
 	it('emits zoom-out clamped at 1', async () => {
