@@ -45,7 +45,7 @@
 			class="rounded-lg border border-zinc-800/60 bg-zinc-900/85 p-4 text-zinc-100 shadow-lg backdrop-blur-md"
 		>
 			<header class="mb-3 flex items-center justify-between gap-2">
-				<h2 class="text-xs font-semibold tracking-wide text-zinc-400 uppercase">{title}</h2>
+				<h2 class="text-sm font-semibold text-zinc-100">{title}</h2>
 				<button
 					type="button"
 					aria-label={`Collapse ${title}`}

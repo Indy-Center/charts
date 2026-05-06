@@ -96,7 +96,7 @@
     </OverlayCard>
 
     <div
-      class="pointer-events-auto absolute top-3 left-1/2 w-full max-w-xs -translate-x-1/2 px-3 sm:px-0"
+      class="pointer-events-auto absolute top-3 left-1/2 w-full max-w-sm -translate-x-1/2 px-3 sm:px-0"
     >
       <AirportSearch onSelectAirport={pickAirport} onSelectChart={(id, c) => pickChart(c, id)} />
     </div>
@@ -104,10 +104,10 @@
     <a
       href="/"
       aria-label="Back to home"
-      class="pointer-events-auto absolute top-3 right-3 flex h-10 cursor-pointer items-center gap-2 rounded-full border border-zinc-800/60 bg-zinc-900/85 px-3 text-xs font-medium tracking-wider text-zinc-300 uppercase backdrop-blur-md transition-colors hover:text-sky-300"
+      title="Back to home"
+      class="pointer-events-auto absolute top-3 right-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-zinc-800/60 bg-zinc-900/85 text-zinc-300 backdrop-blur-md transition-colors hover:text-sky-300"
     >
       <IconHome class="text-base" />
-      <span class="hidden sm:inline">Home</span>
     </a>
 
     {#if selected}

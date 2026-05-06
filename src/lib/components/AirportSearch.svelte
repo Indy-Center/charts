@@ -221,7 +221,7 @@
 		placeholder="Search airport, then / for charts..."
 		autocomplete="off"
 		spellcheck="false"
-		class="w-full rounded-full border border-zinc-800/60 bg-zinc-900/75 py-1.5 pr-12 pl-8 text-sm text-zinc-100 backdrop-blur-md transition-colors placeholder:text-zinc-500 focus:border-sky-700/60 focus:bg-zinc-900/90 focus:outline-none"
+		class="w-full rounded-lg border border-zinc-800/60 bg-zinc-900/75 py-1.5 pr-12 pl-8 text-sm text-zinc-100 backdrop-blur-md transition-colors placeholder:text-zinc-500 focus:border-sky-700/60 focus:bg-zinc-900/90 focus:outline-none"
 	/>
 	<div class="pointer-events-none absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-1">
 		{#if $inputValue}

@@ -35,7 +35,7 @@
 </script>
 
 <div
-	class="flex items-center gap-0.5 rounded-full border border-zinc-800/60 bg-zinc-900/85 p-1 text-zinc-300 backdrop-blur-md"
+	class="flex items-center gap-0.5 rounded-lg border border-zinc-800/60 bg-zinc-900/85 p-1 text-zinc-300 backdrop-blur-md"
 >
 	<button
 		type="button"
