@@ -21,7 +21,7 @@
 					{CHART_GROUP_LABELS[group]}
 				</h3>
 				<ul class="flex flex-col gap-0.5">
-					{#each byGroup[group] as chart (chart.pdf_url)}
+					{#each byGroup[group] as chart (`${chart.chart_name}:${chart.pdf_url}`)}
 						{@const isSelected = chart.pdf_url === selectedPdfUrl}
 						<li>
 							<button

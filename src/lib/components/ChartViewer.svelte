@@ -84,21 +84,21 @@
   {/if}
 
   <div class="pointer-events-none absolute inset-0">
-    <OverlayCard title={overlayTitle} position="top-left">
-      {#snippet icon()}<IconList class="text-lg" />{/snippet}
-      <div class="flex max-h-[70vh] w-72 flex-col">
-        <ChartList
-          byGroup={airport.chartsByGroup}
-          selectedPdfUrl={selected?.pdf_url}
-          onPick={pickChart}
-        />
+    <div class="absolute top-3 left-3 flex w-72 flex-col gap-2">
+      <div class="pointer-events-auto">
+        <AirportSearch onSelectAirport={pickAirport} onSelectChart={(id, c) => pickChart(c, id)} />
       </div>
-    </OverlayCard>
 
-    <div
-      class="pointer-events-auto absolute top-3 left-1/2 w-full max-w-sm -translate-x-1/2 px-3 sm:px-0"
-    >
-      <AirportSearch onSelectAirport={pickAirport} onSelectChart={(id, c) => pickChart(c, id)} />
+      <OverlayCard title={overlayTitle}>
+        {#snippet icon()}<IconList class="text-lg" />{/snippet}
+        <div class="flex max-h-[60vh] flex-col">
+          <ChartList
+            byGroup={airport.chartsByGroup}
+            selectedPdfUrl={selected?.pdf_url}
+            onPick={pickChart}
+          />
+        </div>
+      </OverlayCard>
     </div>
 
     <a

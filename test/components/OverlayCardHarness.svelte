@@ -3,7 +3,7 @@
 	let { title = 'Title', body = '', defaultCollapsed = false } = $props();
 </script>
 
-<OverlayCard {title} {defaultCollapsed} position="top-left">
+<OverlayCard {title} {defaultCollapsed}>
 	{#snippet icon()}<span aria-hidden="true">i</span>{/snippet}
 	{body}
 </OverlayCard>
