@@ -15,27 +15,34 @@
 	const displayList = COMMON_AIRPORTS.map((icao) => icao.replace(/^K/, ''));
 </script>
 
-<main class="mx-auto flex min-h-screen max-w-2xl flex-col px-6 pt-32 pb-12">
-	<header class="mb-12 flex flex-col gap-1.5">
-		<h1 class="text-3xl font-semibold tracking-tight text-zinc-100">charts.flyindycenter.com</h1>
-		<p class="text-xs uppercase tracking-wider text-zinc-500">
-			FAA terminal procedure charts · current AIRAC cycle
+<main class="mx-auto flex min-h-screen max-w-3xl flex-col px-6 pt-24 pb-16 md:pt-32">
+	<header class="mb-12">
+		<h1 class="text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">
+			charts.flyindycenter.com
+		</h1>
+		<p class="mt-3 text-sm text-zinc-400">
+			FAA terminal procedure charts for the current AIRAC cycle.
 		</p>
 	</header>
 
-	<section class="mb-10">
+	<section class="mb-14">
+		<h2 class="mb-3 text-[11px] font-medium tracking-widest text-zinc-500 uppercase">Search</h2>
 		<AirportSearch onSelectAirport={pickAirport} onSelectChart={pickChart} />
+		<p class="mt-2 text-xs text-zinc-600">
+			Type a 3- or 4-letter identifier. Add a chart name to jump straight to it
+			<span class="text-zinc-500">(e.g. <span class="font-mono">IND ils 5l</span>)</span>.
+		</p>
 	</section>
 
 	<section class="mb-16">
-		<h2 class="mb-3 text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">
+		<h2 class="mb-3 text-[11px] font-medium tracking-widest text-zinc-500 uppercase">
 			Common airports
 		</h2>
-		<nav aria-label="Common airports" class="flex flex-wrap gap-2">
+		<nav aria-label="Common airports" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
 			{#each displayList as id (id)}
 				<a
 					href={`/${id.toLowerCase()}`}
-					class="rounded border border-zinc-800 px-3 py-1.5 text-sm font-medium tracking-wide text-zinc-300 transition-colors hover:border-sky-600 hover:text-sky-300"
+					class="flex cursor-pointer items-center justify-center rounded-md border border-zinc-800 bg-zinc-900/40 py-3 font-mono text-sm font-medium tracking-wider text-zinc-300 transition-colors hover:border-sky-700/80 hover:bg-zinc-900 hover:text-sky-300"
 				>
 					{id}
 				</a>
@@ -43,7 +50,17 @@
 		</nav>
 	</section>
 
-	<footer class="mt-auto text-xs text-zinc-600">
-		Indy Center · charts powered by AviationAPI v2
+	<footer class="mt-auto pt-8 text-xs text-zinc-600">
+		<p>
+			Indy Center · charts powered by
+			<a
+				href="https://api-v2.aviationapi.com"
+				target="_blank"
+				rel="noopener"
+				class="cursor-pointer transition-colors hover:text-zinc-400"
+			>
+				AviationAPI v2
+			</a>
+		</p>
 	</footer>
 </main>
