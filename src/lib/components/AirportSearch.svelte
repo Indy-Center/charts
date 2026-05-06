@@ -120,10 +120,23 @@
 		const { id, afterSlash, filter } = parseInputValue($inputValue);
 
 		if (!afterSlash) {
-			// Airport-only mode. Filter common airports by prefix.
-			return COMMON_DISPLAY.filter((d) => d.startsWith(id.toUpperCase())).map(
+			// Airport-only mode. Start with common airports filtered by prefix,
+			// then include the typed id itself if it's a plausible airport that
+			// isn't already in the list (so non-common airports like JFK appear).
+			const upper = id.toUpperCase();
+			const matches = COMMON_DISPLAY.filter((d) => d.startsWith(upper));
+			const out: Row[] = matches.map(
 				(d) => ({ kind: 'airport', id: d, label: d }) as Row
 			);
+			if (
+				upper.length >= 3 &&
+				upper.length <= 4 &&
+				normalizeForApi(upper) &&
+				!matches.includes(upper)
+			) {
+				out.push({ kind: 'airport', id: upper, label: upper });
+			}
+			return out;
 		}
 
 		// Chart mode. Need fetched data for the typed airport.
