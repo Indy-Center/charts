@@ -44,14 +44,25 @@
 		};
 	}
 
+	function tokenizeFilter(filter: string): string[] {
+		// First split on whitespace, hyphens, slashes, parens — typical separators.
+		// Then break each chunk at letter/digit transitions so `i28r` becomes
+		// `[i, 28r]` and matches "ILS RWY 28R".
+		const tokens: string[] = [];
+		for (const chunk of filter.toLowerCase().split(/[\s\-/(),]+/)) {
+			if (!chunk) continue;
+			const parts = chunk.match(/\d+[a-z]*|[a-z]+/g);
+			if (parts) tokens.push(...parts);
+		}
+		return tokens;
+	}
+
 	function chartMatchesFilter(chart: Chart, filter: string): boolean {
 		if (!filter) return true;
 		const haystack = chart.chart_name.toLowerCase();
 		const slug = chartToSlug(chart.chart_name);
-		const tokens = filter
-			.toLowerCase()
-			.split(/[\s-]+/)
-			.filter(Boolean);
+		const tokens = tokenizeFilter(filter);
+		if (tokens.length === 0) return true;
 		return tokens.every((t) => haystack.includes(t) || slug.includes(t));
 	}
 
