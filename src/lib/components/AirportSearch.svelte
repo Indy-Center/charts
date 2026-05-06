@@ -143,13 +143,11 @@
 		if (!fetched) return [];
 		const faa = fetched.airport.faa_ident;
 		const charts: Row[] = [];
-		const seen = new Set<string>();
 		for (const g of CHART_GROUP_ORDER) {
 			for (const c of fetched.chartsByGroup[g]) {
-				if (seen.has(c.pdf_url)) continue;
-				if (!chartMatchesFilter(c, filter)) continue;
-				seen.add(c.pdf_url);
-				charts.push({ kind: 'chart', airportId: faa, chart: c });
+				if (chartMatchesFilter(c, filter)) {
+					charts.push({ kind: 'chart', airportId: faa, chart: c });
+				}
 			}
 		}
 		return charts;
@@ -269,7 +267,7 @@
 			use:melt={$menu}
 			class="absolute top-full right-0 left-0 z-50 mt-1 max-h-[60vh] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 text-sm shadow-lg"
 		>
-			{#each rows as row (row.kind === 'airport' ? `a:${row.id}` : `c:${row.chart.pdf_url}`)}
+			{#each rows as row (row.kind === 'airport' ? `a:${row.id}` : `c:${row.chart.chart_name}:${row.chart.pdf_url}`)}
 				<li
 					use:melt={$option({
 						value: row,
