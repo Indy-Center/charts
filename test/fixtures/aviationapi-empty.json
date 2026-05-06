@@ -1,0 +1,14 @@
+{
+  "airport_data": {
+    "country": "USA",
+    "faa_ident": "ZZZ",
+    "is_military": false
+  },
+  "charts": {
+    "airport_diagram": [],
+    "general": [],
+    "departure": [],
+    "arrival": [],
+    "approach": []
+  }
+}
