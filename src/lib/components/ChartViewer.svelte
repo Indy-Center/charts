@@ -50,9 +50,11 @@
     viewStates.set(selected.pdf_url, next);
   }
 
-  function pickChart(c: Chart) {
-    goto(`/${airport.airport.faa_ident.toLowerCase()}/${chartToSlug(c.chart_name)}`, {
-      replaceState: true,
+  function pickChart(c: Chart, airportFaa?: string) {
+    const target = (airportFaa ?? airport.airport.faa_ident).toLowerCase();
+    const sameAirport = target === airport.airport.faa_ident.toLowerCase();
+    goto(`/${target}/${chartToSlug(c.chart_name)}`, {
+      replaceState: sameAirport,
       noScroll: true,
       keepFocus: true
     });
@@ -89,7 +91,7 @@
     <OverlayCard title={overlayTitle} position="top-left">
       {#snippet icon()}<IconSearch class="text-lg" />{/snippet}
       <div class="flex max-h-[70vh] w-72 flex-col gap-3">
-        <AirportSearch onSelectAirport={pickAirport} onSelectChart={(_id, c) => pickChart(c)} />
+        <AirportSearch onSelectAirport={pickAirport} onSelectChart={(id, c) => pickChart(c, id)} />
         <ChartList
           byGroup={airport.chartsByGroup}
           selectedPdfUrl={selected?.pdf_url}
