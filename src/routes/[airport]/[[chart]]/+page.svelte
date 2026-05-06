@@ -54,7 +54,9 @@
   <title>{pageTitle}</title>
 </svelte:head>
 
-<ChartViewer airport={data.airport} selected={data.selected} />
+{#key data.airport.airport.faa_ident}
+  <ChartViewer airport={data.airport} selected={data.selected} />
+{/key}
 
 {#if data.slugError && showSlugError}
   <div
