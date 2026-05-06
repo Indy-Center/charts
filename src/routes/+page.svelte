@@ -5,11 +5,11 @@
 	import { chartToSlug } from '$lib/slug';
 
 	function pickAirport(id: string) {
-		goto(`/${id}`);
+		goto(`/${id.toLowerCase()}`);
 	}
 
 	function pickChart(id: string, chart: { chart_name: string; pdf_url: string }) {
-		goto(`/${id}/${chartToSlug(chart.chart_name)}`);
+		goto(`/${id.toLowerCase()}/${chartToSlug(chart.chart_name)}`);
 	}
 
 	const displayList = COMMON_AIRPORTS.map((icao) => icao.replace(/^K/, ''));
@@ -34,7 +34,7 @@
 		<nav aria-label="Common airports" class="flex flex-wrap gap-2">
 			{#each displayList as id (id)}
 				<a
-					href={`/${id}`}
+					href={`/${id.toLowerCase()}`}
 					class="rounded border border-zinc-800 px-3 py-1.5 text-sm font-medium tracking-wide text-zinc-300 transition-colors hover:border-sky-600 hover:text-sky-300"
 				>
 					{id}

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { SvelteMap } from 'svelte/reactivity';
   import type { AirportData, Chart, ViewState } from '$lib/types';
@@ -28,11 +27,6 @@
 
   let totalPages = $state(1);
   let currentPage = $state(1);
-  let collapsedDefault = $state(false);
-
-  onMount(() => {
-    collapsedDefault = window.matchMedia('(max-width: 767px)').matches;
-  });
 
   function titleCase(s: string): string {
     return s
@@ -57,7 +51,7 @@
   }
 
   function pickChart(c: Chart) {
-    goto(`/${airport.airport.faa_ident}/${chartToSlug(c.chart_name)}`, {
+    goto(`/${airport.airport.faa_ident.toLowerCase()}/${chartToSlug(c.chart_name)}`, {
       replaceState: true,
       noScroll: true,
       keepFocus: true
@@ -65,7 +59,7 @@
   }
 
   function pickAirport(faaId: string) {
-    goto(`/${faaId}`);
+    goto(`/${faaId.toLowerCase()}`);
   }
 </script>
 
@@ -92,7 +86,7 @@
   {/if}
 
   <div class="pointer-events-none absolute inset-0">
-    <OverlayCard title={overlayTitle} position="top-left" defaultCollapsed={collapsedDefault}>
+    <OverlayCard title={overlayTitle} position="top-left" defaultCollapsed={true}>
       {#snippet icon()}<IconSearch class="text-lg" />{/snippet}
       <div class="flex max-h-[70vh] w-72 flex-col gap-3">
         <AirportSearch onSelectAirport={pickAirport} onSelectChart={(_id, c) => pickChart(c)} />

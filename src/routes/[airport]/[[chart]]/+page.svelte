@@ -24,23 +24,22 @@
     };
   });
 
-  // Canonicalize URL airport segment to FAA form once on mount.
+  // Canonicalize URL airport segment to lowercase FAA form once on mount.
   onMount(() => {
-    const expected = data.airport.airport.faa_ident;
-    if (page.params.airport !== expected) {
+    const expected = data.airport.airport.faa_ident.toLowerCase();
+    const current = (page.params.airport ?? '').toLowerCase();
+    if (current !== expected) {
       const tail = data.selected ? `/${chartToSlug(data.selected.chart_name)}` : '';
       replaceState(`/${expected}${tail}`, page.state);
     }
   });
 
-  // If a slug was provided but didn't match, swap URL to the resolved chart silently.
+  // If a slug was provided but didn't resolve, drop it from the URL —
+  // the default chart is already rendering, the toast tells the user why.
   $effect(() => {
-    if (data.slugError && data.selected) {
-      const slug = chartToSlug(data.selected.chart_name);
-      const expected = data.airport.airport.faa_ident;
-      if (page.params.airport === expected && page.params.chart !== slug) {
-        replaceState(`/${expected}/${slug}`, page.state);
-      }
+    if (data.slugError) {
+      const expected = data.airport.airport.faa_ident.toLowerCase();
+      replaceState(`/${expected}`, page.state);
     }
   });
 
