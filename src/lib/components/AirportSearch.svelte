@@ -44,27 +44,29 @@
 		};
 	}
 
-	function tokenizeFilter(filter: string): string[] {
-		// First split on whitespace, hyphens, slashes, parens — typical separators.
-		// Then break each chunk at letter/digit transitions so `i28r` becomes
-		// `[i, 28r]` and matches "ILS RWY 28R".
-		const tokens: string[] = [];
-		for (const chunk of filter.toLowerCase().split(/[\s\-/(),]+/)) {
-			if (!chunk) continue;
-			const parts = chunk.match(/\d+[a-z]*|[a-z]+/g);
-			if (parts) tokens.push(...parts);
-		}
-		return tokens;
-	}
-
 	function chartMatchesFilter(chart: Chart, filter: string): boolean {
 		if (!filter) return true;
 		const haystack = chart.chart_name.toLowerCase();
 		const slug = chartToSlug(chart.chart_name);
-		const tokens = tokenizeFilter(filter);
-		if (tokens.length === 0) return true;
+		const tokens = filter
+			.toLowerCase()
+			.split(/[\s-]+/)
+			.filter(Boolean);
 		return tokens.every((t) => haystack.includes(t) || slug.includes(t));
 	}
+
+	// If the user types `c/` or `cm/` and the prefix uniquely matches one common
+	// airport, autocomplete the prefix to that airport's full code.
+	$effect(() => {
+		const v = $inputValue;
+		const slashIdx = v.indexOf('/');
+		if (slashIdx < 0) return;
+		const before = v.slice(0, slashIdx).trim().toUpperCase();
+		if (before.length === 0 || before.length >= 3) return;
+		const matches = COMMON_DISPLAY.filter((d) => d.startsWith(before));
+		if (matches.length !== 1) return;
+		inputValue.set(`${matches[0]}/${v.slice(slashIdx + 1)}`);
+	});
 
 	// Fetch the airport's charts only when the user has entered chart-mode (slash).
 	$effect(() => {
