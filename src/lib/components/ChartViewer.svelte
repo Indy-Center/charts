@@ -1,10 +1,9 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { SvelteMap } from 'svelte/reactivity';
   import type { AirportData, Chart, ViewState } from '$lib/types';
   import { DEFAULT_VIEW_STATE } from '$lib/types';
   import { chartToSlug } from '$lib/slug';
-  import type { PDFDocumentProxy } from 'pdfjs-dist';
+  import { parsedDocs, viewStates } from '$lib/viewer-cache';
   import OverlayCard from './OverlayCard.svelte';
   import ChartCanvas from './ChartCanvas.svelte';
   import ChartList from './ChartList.svelte';
@@ -21,9 +20,6 @@
     airport: AirportData;
     selected: Chart | null;
   } = $props();
-
-  const parsedDocs = new Map<string, PDFDocumentProxy>();
-  const viewStates = new SvelteMap<string, ViewState>();
 
   let totalPages = $state(1);
   let currentPage = $state(1);
