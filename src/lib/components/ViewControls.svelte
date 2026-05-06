@@ -1,4 +1,8 @@
 <script lang="ts">
+	import IconZoomOut from '~icons/mdi/magnify-minus-outline';
+	import IconZoomIn from '~icons/mdi/magnify-plus-outline';
+	import IconRotate from '~icons/mdi/rotate-right';
+	import IconInvert from '~icons/mdi/invert-colors';
 	import type { ViewState } from '$lib/types';
 
 	let {
@@ -30,41 +34,43 @@
 	}
 </script>
 
-<div class="flex items-center gap-1 text-zinc-200">
+<div
+	class="flex items-center gap-0.5 rounded-full border border-zinc-800/60 bg-zinc-900/85 p-1 text-zinc-300 backdrop-blur-md"
+>
 	<button
 		type="button"
 		aria-label="Zoom out"
-		class="rounded px-2 py-1 hover:bg-zinc-800/70"
+		class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-800/70"
 		onclick={zoomOut}
 	>
-		−
+		<IconZoomOut />
 	</button>
-	<span class="min-w-[3.5rem] text-center text-xs tabular-nums text-zinc-400">
-		{Math.round(view.zoom * 100)}%
-	</span>
 	<button
 		type="button"
 		aria-label="Zoom in"
-		class="rounded px-2 py-1 hover:bg-zinc-800/70"
+		class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-800/70"
 		onclick={zoomIn}
 	>
-		+
+		<IconZoomIn />
 	</button>
 	<button
 		type="button"
 		aria-label="Rotate 90 degrees"
-		class="rounded px-2 py-1 hover:bg-zinc-800/70"
+		class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-800/70"
 		onclick={rotate}
 	>
-		⟳
+		<IconRotate />
 	</button>
 	<button
 		type="button"
 		aria-label="Invert colors"
 		aria-pressed={view.invert}
-		class={['rounded px-2 py-1 hover:bg-zinc-800/70', view.invert && 'text-sky-400']}
+		class={[
+			'flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-800/70',
+			view.invert && 'text-sky-400'
+		]}
 		onclick={toggleInvert}
 	>
-		◐
+		<IconInvert />
 	</button>
 </div>

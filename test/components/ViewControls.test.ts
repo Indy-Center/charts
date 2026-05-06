@@ -5,11 +5,6 @@ import ViewControls from '$lib/components/ViewControls.svelte';
 import { DEFAULT_VIEW_STATE } from '$lib/types';
 
 describe('ViewControls', () => {
-	it('shows current zoom percent', () => {
-		render(ViewControls, { view: { ...DEFAULT_VIEW_STATE, zoom: 1.5 }, onChange: () => {} });
-		expect(screen.getByText('150%')).toBeInTheDocument();
-	});
-
 	it('emits zoom-in', async () => {
 		const onChange = vi.fn();
 		render(ViewControls, { view: { ...DEFAULT_VIEW_STATE }, onChange });
