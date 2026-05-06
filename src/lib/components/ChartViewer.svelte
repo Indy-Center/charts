@@ -12,14 +12,15 @@
   import ViewControls from './ViewControls.svelte';
   import AirportSearch from './AirportSearch.svelte';
   import IconSearch from '~icons/mdi/magnify';
-  import IconTune from '~icons/mdi/tune';
 
   let {
     airport,
-    selected
+    selected,
+    chartSlugInUrl = false
   }: {
     airport: AirportData;
     selected: Chart | null;
+    chartSlugInUrl?: boolean;
   } = $props();
 
   const parsedDocs = new Map<string, PDFDocumentProxy>();
@@ -86,7 +87,7 @@
   {/if}
 
   <div class="pointer-events-none absolute inset-0">
-    <OverlayCard title={overlayTitle} position="top-left" defaultCollapsed={true}>
+    <OverlayCard title={overlayTitle} position="top-left" defaultCollapsed={chartSlugInUrl}>
       {#snippet icon()}<IconSearch class="text-lg" />{/snippet}
       <div class="flex max-h-[70vh] w-72 flex-col gap-3">
         <AirportSearch onSelectAirport={pickAirport} onSelectChart={(_id, c) => pickChart(c)} />
@@ -99,10 +100,9 @@
     </OverlayCard>
 
     {#if selected}
-      <OverlayCard title="View" position="top-right" defaultCollapsed={true}>
-        {#snippet icon()}<IconTune class="text-lg" />{/snippet}
+      <div class="pointer-events-auto absolute right-3 bottom-3">
         <ViewControls {view} onChange={onCanvasChange} />
-      </OverlayCard>
+      </div>
 
       <ChartMeta
         name={selected.chart_name}
