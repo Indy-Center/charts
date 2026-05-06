@@ -6,6 +6,8 @@
 	import { chartToSlug } from '$lib/slug';
 	import type { AirportData, Chart } from '$lib/types';
 	import { CHART_GROUP_ORDER } from '$lib/types';
+	import IconSearch from '~icons/mdi/magnify';
+	import IconClose from '~icons/mdi/close';
 
 	type Row =
 		| { kind: 'airport'; id: string; label: string; name?: string }
@@ -179,7 +181,22 @@
 		}
 	}
 
+	let focused = $state(false);
+
+	function clearInput() {
+		inputValue.set('');
+		open.set(false);
+	}
+
 	function onInputKeyDown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			if ($inputValue) {
+				e.preventDefault();
+				clearInput();
+			}
+			(e.currentTarget as HTMLInputElement)?.blur();
+			return;
+		}
 		if (e.key !== 'Enter') return;
 		e.preventDefault();
 		e.stopPropagation();
@@ -187,42 +204,73 @@
 	}
 </script>
 
-<div class="flex flex-col gap-1">
+<div class="relative">
 	<label use:melt={$label} class="sr-only">Search airport or chart</label>
+	<span class="pointer-events-none absolute top-1/2 left-3 flex -translate-y-1/2 text-zinc-500">
+		<IconSearch class="text-base" />
+	</span>
 	<input
 		use:melt={$input}
-		onfocus={() => open.set(true)}
+		onfocus={() => {
+			focused = true;
+			open.set(true);
+		}}
+		onblur={() => (focused = false)}
 		oninput={() => open.set(true)}
 		onkeydown={onInputKeyDown}
-		placeholder="IND, KIND, IND/ils 5l..."
-		class="w-full rounded border border-zinc-800 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-sky-500 focus:outline-none"
+		placeholder="Search airport, then / for charts..."
+		autocomplete="off"
+		spellcheck="false"
+		class="w-full rounded-lg border border-zinc-800 bg-zinc-900 py-2 pr-16 pl-9 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-sky-500 focus:bg-zinc-900 focus:ring-2 focus:ring-sky-500/30 focus:outline-none"
 	/>
+	<div class="pointer-events-none absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-1">
+		{#if $inputValue}
+			<button
+				type="button"
+				aria-label="Clear search"
+				onclick={clearInput}
+				class="pointer-events-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+			>
+				<IconClose class="text-sm" />
+			</button>
+		{:else if focused}
+			<kbd
+				class="hidden rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 sm:inline-flex"
+				>esc</kbd
+			>
+		{:else}
+			<kbd
+				class="hidden rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 sm:inline-flex"
+				title="Focus search">/</kbd
+			>
+		{/if}
+	</div>
 	{#if pending}
-		<span class="text-[10px] text-zinc-500">searching…</span>
+		<span class="absolute -bottom-4 left-2 text-[10px] text-zinc-500">searching…</span>
+	{/if}
+
+	{#if $open}
+		<ul
+			use:melt={$menu}
+			class="absolute top-full right-0 left-0 z-50 mt-1 max-h-[60vh] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 text-sm shadow-lg"
+		>
+			{#each rows as row (row.kind === 'airport' ? `a:${row.id}` : `c:${row.chart.pdf_url}`)}
+				<li
+					use:melt={$option({
+						value: row,
+						label: row.kind === 'airport' ? row.label : row.chart.chart_name
+					})}
+					class="cursor-pointer px-3 py-1.5 text-zinc-200 data-[highlighted]:bg-sky-500/15 data-[highlighted]:text-sky-100"
+				>
+					{#if row.kind === 'airport'}
+						<span class="font-medium tracking-wide">{row.label}</span>
+					{:else}
+						<span>{row.chart.chart_name}</span>
+					{/if}
+				</li>
+			{:else}
+				<li class="px-3 py-1.5 text-xs text-zinc-500">No matches</li>
+			{/each}
+		</ul>
 	{/if}
 </div>
-
-{#if $open}
-	<ul
-		use:melt={$menu}
-		class="z-50 mt-1 max-h-[50vh] overflow-y-auto rounded border border-zinc-800 bg-zinc-900 text-sm shadow-lg"
-	>
-		{#each rows as row (row.kind === 'airport' ? `a:${row.id}` : `c:${row.chart.pdf_url}`)}
-			<li
-				use:melt={$option({
-					value: row,
-					label: row.kind === 'airport' ? row.label : row.chart.chart_name
-				})}
-				class="cursor-pointer px-2 py-1 text-zinc-200 data-[highlighted]:bg-sky-500/15 data-[highlighted]:text-sky-100"
-			>
-				{#if row.kind === 'airport'}
-					<span class="font-medium">{row.label}</span>
-				{:else}
-					<span>{row.chart.chart_name}</span>
-				{/if}
-			</li>
-		{:else}
-			<li class="px-2 py-1 text-xs text-zinc-500">No matches</li>
-		{/each}
-	</ul>
-{/if}
