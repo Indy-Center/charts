@@ -3,11 +3,12 @@
 	import { COMMON_AIRPORTS } from '$lib/airports';
 	import { airportCache } from '$lib/airport-cache';
 	import { normalizeForApi, displayForm } from '$lib/airport-id';
+	import { chartToSlug } from '$lib/slug';
 	import type { AirportData, Chart } from '$lib/types';
 	import { CHART_GROUP_ORDER } from '$lib/types';
 
 	type Row =
-		| { kind: 'airport'; id: string; label: string }
+		| { kind: 'airport'; id: string; label: string; name?: string }
 		| { kind: 'chart'; airportId: string; chart: Chart };
 
 	let {
@@ -30,17 +31,39 @@
 	let abortCtrl: AbortController | null = null;
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-	function parseInputValue(v: string): { id: string; filter: string } {
+	function parseInputValue(v: string): { id: string; afterSlash: boolean; filter: string } {
 		const trimmed = v.trim();
-		if (!trimmed) return { id: '', filter: '' };
-		const match = trimmed.match(/^(\S+)(?:\s+(.*))?$/);
-		return { id: match?.[1] ?? '', filter: (match?.[2] ?? '').trim() };
+		const slashIdx = trimmed.indexOf('/');
+		if (slashIdx < 0) {
+			return { id: trimmed, afterSlash: false, filter: '' };
+		}
+		return {
+			id: trimmed.slice(0, slashIdx).trim(),
+			afterSlash: true,
+			filter: trimmed.slice(slashIdx + 1).trim()
+		};
 	}
 
+	function chartMatchesFilter(chart: Chart, filter: string): boolean {
+		if (!filter) return true;
+		const haystack = chart.chart_name.toLowerCase();
+		const slug = chartToSlug(chart.chart_name);
+		const tokens = filter
+			.toLowerCase()
+			.split(/[\s-]+/)
+			.filter(Boolean);
+		return tokens.every((t) => haystack.includes(t) || slug.includes(t));
+	}
+
+	// Fetch the airport's charts only when the user has entered chart-mode (slash).
 	$effect(() => {
-		const { id } = parseInputValue($inputValue);
+		const { id, afterSlash } = parseInputValue($inputValue);
 		if (debounceTimer) clearTimeout(debounceTimer);
 		if (abortCtrl) abortCtrl.abort();
+		if (!afterSlash) {
+			fetched = null;
+			return;
+		}
 		if (id.length < 3 || id.length > 4) {
 			fetched = null;
 			return;
@@ -79,23 +102,27 @@
 	});
 
 	const rows = $derived.by((): Row[] => {
-		const { id, filter } = parseInputValue($inputValue);
-		if (!fetched) {
+		const { id, afterSlash, filter } = parseInputValue($inputValue);
+
+		if (!afterSlash) {
+			// Airport-only mode. Filter common airports by prefix.
 			return COMMON_DISPLAY.filter((d) => d.startsWith(id.toUpperCase())).map(
 				(d) => ({ kind: 'airport', id: d, label: d }) as Row
 			);
 		}
+
+		// Chart mode. Need fetched data for the typed airport.
+		if (!fetched) return [];
 		const faa = fetched.airport.faa_ident;
-		const head: Row = { kind: 'airport', id: faa, label: faa };
 		const charts: Row[] = [];
 		for (const g of CHART_GROUP_ORDER) {
 			for (const c of fetched.chartsByGroup[g]) {
-				if (!filter || c.chart_name.toLowerCase().includes(filter.toLowerCase())) {
+				if (chartMatchesFilter(c, filter)) {
 					charts.push({ kind: 'chart', airportId: faa, chart: c });
 				}
 			}
 		}
-		return [head, ...charts];
+		return charts;
 	});
 
 	$effect(() => {
@@ -107,6 +134,36 @@
 		selected.set(undefined);
 		inputValue.set('');
 	});
+
+	function commit() {
+		const { id, afterSlash } = parseInputValue($inputValue);
+
+		// If the dropdown narrowed to exactly one row, take it.
+		if (rows.length === 1) {
+			const r = rows[0];
+			if (r.kind === 'airport') onSelectAirport(r.id);
+			else onSelectChart(r.airportId, r.chart);
+			inputValue.set('');
+			return;
+		}
+
+		// Otherwise, fall back to the airport root if the typed id is plausible.
+		const norm = id ? normalizeForApi(id) : null;
+		if (norm) {
+			onSelectAirport(id.toUpperCase());
+			inputValue.set('');
+			return;
+		}
+	}
+
+	function onInputKeyDown(e: KeyboardEvent) {
+		if (e.key !== 'Enter') return;
+		// If a dropdown item is keyboard-highlighted, defer to Melt's selection logic.
+		const highlighted = document.querySelector('[role="option"][data-highlighted]');
+		if (highlighted) return;
+		e.preventDefault();
+		commit();
+	}
 </script>
 
 <div class="flex flex-col gap-1">
@@ -115,7 +172,8 @@
 		use:melt={$input}
 		onfocus={() => open.set(true)}
 		oninput={() => open.set(true)}
-		placeholder="IND, KIND, IND ils 5l..."
+		onkeydown={onInputKeyDown}
+		placeholder="IND, KIND, IND/ils 5l..."
 		class="w-full rounded border border-zinc-800 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-sky-500 focus:outline-none"
 	/>
 	{#if pending}
@@ -138,9 +196,6 @@
 			>
 				{#if row.kind === 'airport'}
 					<span class="font-medium">{row.label}</span>
-					{#if fetched && row.id === fetched.airport.faa_ident && fetched.airport.airport_name}
-						<span class="ml-2 text-xs text-zinc-500">{fetched.airport.airport_name}</span>
-					{/if}
 				{:else}
 					<span>{row.chart.chart_name}</span>
 				{/if}
