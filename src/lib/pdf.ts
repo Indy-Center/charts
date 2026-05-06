@@ -46,6 +46,12 @@ export async function loadPdfDocument(url: string): Promise<PDFDocumentProxy> {
   // Worker is bundled by Vite via ?url import.
   const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-  const task = pdfjs.getDocument({ url: proxyPdfUrl(url), withCredentials: false });
+  // verbosity: 0 = errors only. Silences benign worker chatter about
+  // missing-but-polyfilled Math.sumPrecise and TrueType glyph parsing.
+  const task = pdfjs.getDocument({
+    url: proxyPdfUrl(url),
+    withCredentials: false,
+    verbosity: 0
+  });
   return task.promise;
 }
