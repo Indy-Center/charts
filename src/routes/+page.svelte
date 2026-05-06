@@ -50,9 +50,13 @@
 		</nav>
 	</section>
 
-	<footer class="mt-auto pt-8 text-xs text-zinc-600">
+	<footer class="mt-auto flex flex-col gap-1 pt-8 text-xs leading-snug text-zinc-600">
+		<p class="text-zinc-500">
+			This site is not affiliated with the Federal Aviation Administration or any governing
+			aviation body. All content contained herein is approved only for use on the VATSIM network.
+		</p>
 		<p>
-			Indy Center · charts powered by
+			Copyright {new Date().getFullYear()} Indy Center · charts powered by
 			<a
 				href="https://api-v2.aviationapi.com"
 				target="_blank"
