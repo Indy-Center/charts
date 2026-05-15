@@ -57,7 +57,13 @@ describe('ChartList', () => {
 			did_change: false
 		};
 		render(ChartList, {
-			byGroup: { airport_diagram: [], general: [takeoff, dva], approach: [], departure: [], arrival: [] },
+			byGroup: {
+				airport_diagram: [],
+				general: [takeoff, dva],
+				approach: [],
+				departure: [],
+				arrival: []
+			},
 			selected: dva,
 			onPick: () => {}
 		});

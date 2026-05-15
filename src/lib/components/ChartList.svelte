@@ -40,9 +40,7 @@
 							>
 								<span class="truncate">{chart.chart_name}</span>
 								{#if chart.did_change}
-									<span
-										aria-label="Changed this cycle"
-										class="h-1.5 w-1.5 rounded-full bg-sky-500"
+									<span aria-label="Changed this cycle" class="h-1.5 w-1.5 rounded-full bg-sky-500"
 									></span>
 								{/if}
 							</button>

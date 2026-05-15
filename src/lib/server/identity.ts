@@ -8,5 +8,5 @@ import type { RequestEvent } from '@sveltejs/kit';
  * IDENTITY service binding and call validateSession via RPC.
  */
 export async function getCurrentUser(_event: RequestEvent): Promise<null> {
-  return null;
+	return null;
 }

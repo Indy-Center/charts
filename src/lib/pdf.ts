@@ -10,31 +10,31 @@ const PROXIED_HOSTS = new Set(['charts-v2.aviationapi.com']);
  * because the upstream CDN doesn't send CORS headers.
  */
 export function proxyPdfUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    if (PROXIED_HOSTS.has(parsed.host)) {
-      return `/api/pdf?url=${encodeURIComponent(url)}`;
-    }
-  } catch {
-    // not an absolute URL — leave it alone
-  }
-  return url;
+	try {
+		const parsed = new URL(url);
+		if (PROXIED_HOSTS.has(parsed.host)) {
+			return `/api/pdf?url=${encodeURIComponent(url)}`;
+		}
+	} catch {
+		// not an absolute URL — leave it alone
+	}
+	return url;
 }
 
 export function createDocCache(): DocCache {
-  return new Map();
+	return new Map();
 }
 
 export async function getDocument(
-  url: string,
-  cache: DocCache,
-  loader: DocLoader
+	url: string,
+	cache: DocCache,
+	loader: DocLoader
 ): Promise<PDFDocumentProxy> {
-  const cached = cache.get(url);
-  if (cached) return cached;
-  const doc = await loader(url);
-  cache.set(url, doc);
-  return doc;
+	const cached = cache.get(url);
+	if (cached) return cached;
+	const doc = await loader(url);
+	cache.set(url, doc);
+	return doc;
 }
 
 /**
@@ -42,16 +42,16 @@ export async function getDocument(
  * doesn't get pulled into the SSR bundle.
  */
 export async function loadPdfDocument(url: string): Promise<PDFDocumentProxy> {
-  const pdfjs = await import('pdfjs-dist');
-  // Worker is bundled by Vite via ?url import.
-  const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
-  pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-  // verbosity: 0 = errors only. Silences benign worker chatter about
-  // missing-but-polyfilled Math.sumPrecise and TrueType glyph parsing.
-  const task = pdfjs.getDocument({
-    url: proxyPdfUrl(url),
-    withCredentials: false,
-    verbosity: 0
-  });
-  return task.promise;
+	const pdfjs = await import('pdfjs-dist');
+	// Worker is bundled by Vite via ?url import.
+	const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
+	pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+	// verbosity: 0 = errors only. Silences benign worker chatter about
+	// missing-but-polyfilled Math.sumPrecise and TrueType glyph parsing.
+	const task = pdfjs.getDocument({
+		url: proxyPdfUrl(url),
+		withCredentials: false,
+		verbosity: 0
+	});
+	return task.promise;
 }

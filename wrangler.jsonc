@@ -12,9 +12,7 @@
 	"observability": {
 		"enabled": true
 	},
-	"routes": [
-		{ "pattern": "charts.flyindycenter.com", "custom_domain": true }
-	],
+	"routes": [{ "pattern": "charts.flyindycenter.com", "custom_domain": true }],
 	"services": [
 		// Identity worker binding is declared but unused in v1.
 		// Wire `getCurrentUser` (src/lib/server/identity.ts) through this when integrating.

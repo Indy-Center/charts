@@ -97,10 +97,7 @@
 			const baseViewport = page.getViewport({ scale: 1 });
 			const containerW = containerEl?.clientWidth ?? window.innerWidth;
 			const containerH = containerEl?.clientHeight ?? window.innerHeight;
-			const fitScale = Math.min(
-				containerW / baseViewport.width,
-				containerH / baseViewport.height
-			);
+			const fitScale = Math.min(containerW / baseViewport.width, containerH / baseViewport.height);
 			const scale = fitScale * view.zoom;
 			const viewport = page.getViewport({ scale, rotation: view.rotation });
 			canvasEl.width = Math.ceil(viewport.width);
@@ -224,9 +221,7 @@
 		</div>
 	{/if}
 	{#if error}
-		<div
-			class="rounded-lg border border-zinc-800 bg-zinc-900/95 p-4 text-center backdrop-blur-md"
-		>
+		<div class="rounded-lg border border-zinc-800 bg-zinc-900/95 p-4 text-center backdrop-blur-md">
 			<p class="text-sm text-zinc-200">{error}</p>
 			<button
 				type="button"

@@ -1,0 +1,8 @@
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lockb
+.svelte-kit
+build
+node_modules
+static
