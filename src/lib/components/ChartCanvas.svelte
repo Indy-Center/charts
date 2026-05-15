@@ -116,10 +116,14 @@
 				}
 				throw err;
 			} finally {
-				if (activeRenderTask === task) activeRenderTask = null;
+				if (activeRenderTask === task) {
+					activeRenderTask = null;
+				}
 			}
 			if (myToken !== renderToken) return;
-			if (view.invert) applyInvert(ctx, canvasEl.width, canvasEl.height);
+			if (view.invert) {
+				applyInvert(ctx, canvasEl.width, canvasEl.height);
+			}
 			loading = false;
 		} catch (err) {
 			if (myToken !== renderToken) return;
@@ -147,7 +151,9 @@
 		void view.rotation;
 		void view.invert;
 		void view.page;
-		if (canvasEl) renderNow();
+		if (canvasEl) {
+			renderNow();
+		}
 	});
 
 	// Wheel = zoom.

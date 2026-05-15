@@ -25,6 +25,8 @@ export const load: LayoutLoad = async ({ params, fetch }) => {
 	}
 
 	const data = (await resp.json()) as AirportData;
-	if (browser) airportCache.set(data);
+	if (browser) {
+		airportCache.set(data);
+	}
 	return { airport: data };
 };

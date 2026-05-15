@@ -155,15 +155,21 @@
 		const sel = $selected;
 		if (!sel) return;
 		const row = sel.value;
-		if (row.kind === 'airport') onSelectAirport(row.id);
-		else onSelectChart(row.airportId, row.chart);
+		if (row.kind === 'airport') {
+			onSelectAirport(row.id);
+		} else {
+			onSelectChart(row.airportId, row.chart);
+		}
 		selected.set(undefined);
 		inputValue.set('');
 	});
 
 	function pickRow(r: Row) {
-		if (r.kind === 'airport') onSelectAirport(r.id);
-		else onSelectChart(r.airportId, r.chart);
+		if (r.kind === 'airport') {
+			onSelectAirport(r.id);
+		} else {
+			onSelectChart(r.airportId, r.chart);
+		}
 		inputValue.set('');
 	}
 

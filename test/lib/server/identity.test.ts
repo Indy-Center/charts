@@ -54,7 +54,8 @@ describe('getSessionContext', () => {
 			} as any,
 			roles: [],
 			sessionExpiresAt: new Date(),
-			activeSession: null
+			activeSession: null,
+			activeFlightPlan: null
 		};
 		const event = makeEvent({
 			cookie: 'abc',
