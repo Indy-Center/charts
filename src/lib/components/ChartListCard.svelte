@@ -1,18 +1,23 @@
 <!-- src/lib/components/ChartListCard.svelte -->
 <!--
-  Reusable bordered card that wraps a ChartList. Used on the home page (one
-  card per flight role) and on the chart viewer (one card per pinned airport).
-  Collapsible — when collapsed, the body hides but the header strip stays
-  visible so users can still see which airport a pinned card represents.
+  Reusable collapsible card for a single airport's chart list. Used on the
+  home page (one card per flight role) and on the chart viewer's pinboard
+  (one card per pinboard slot).
 
-  When `primary` is provided, the card renders a curated short list at the
-  top of the body, followed by a "Show N more" toggle that reveals the full
-  `chartsByGroup` underneath.
+  Collapsed view: airport id + role + chevron header. If any charts are
+  pinned (via defaultPins from the server or the user's chart-pins store),
+  they render as small clickable chips below the header.
+
+  Expanded view: full ChartList. Each row has a pin/unpin toggle so users
+  can curate their own quick-access set.
 -->
 <script lang="ts">
 	import IconChevron from '~icons/mdi/chevron-down';
-	import ChartList from './ChartList.svelte';
+	import IconPin from '~icons/mdi/pin';
+	import IconPinOutline from '~icons/mdi/pin-outline';
+	import { CHART_GROUP_LABELS, CHART_GROUP_ORDER } from '$lib/types';
 	import type { Chart, ChartsByGroup } from '$lib/types';
+	import { isUserPinned, togglePin, userPinsFor } from '$lib/chart-pins';
 
 	let {
 		airportId,
@@ -20,7 +25,7 @@
 		roleLabel,
 		href,
 		chartsByGroup,
-		primary,
+		defaultPins = [],
 		selected = null,
 		onPick,
 		defaultCollapsed = false
@@ -30,7 +35,7 @@
 		roleLabel?: string;
 		href?: string;
 		chartsByGroup: ChartsByGroup;
-		primary?: Chart[];
+		defaultPins?: Chart[];
 		selected?: Chart | null;
 		onPick: (chart: Chart) => void;
 		defaultCollapsed?: boolean;
@@ -38,32 +43,40 @@
 
 	// svelte-ignore state_referenced_locally
 	let collapsed = $state(defaultCollapsed);
-	let showAllMore = $state(false);
 
-	const moreByGroup = $derived.by<ChartsByGroup | null>(() => {
-		if (!primary) {
-			return null;
+	// Effective pins = server defaults ∪ user-toggled, deduped by pdf_url and
+	// rendered in the order charts appear in chartsByGroup so the chip order
+	// is stable across renders.
+	const userPins = $derived(userPinsFor(airportId));
+
+	const allChartsOrdered = $derived.by(() => {
+		const out: Chart[] = [];
+		for (const group of CHART_GROUP_ORDER) {
+			for (const c of chartsByGroup[group]) {
+				out.push(c);
+			}
 		}
-		const included = new Set(primary.map((c) => c.pdf_url));
-		const out: ChartsByGroup = {
-			airport_diagram: [],
-			general: [],
-			approach: [],
-			departure: [],
-			arrival: []
-		};
-		(Object.keys(chartsByGroup) as (keyof ChartsByGroup)[]).forEach((g) => {
-			out[g] = chartsByGroup[g].filter((c) => !included.has(c.pdf_url));
-		});
 		return out;
 	});
 
-	const moreCount = $derived.by(() => {
-		if (!moreByGroup) {
-			return 0;
+	const effectivePins = $derived.by(() => {
+		const set = new Set<string>(defaultPins.map((c) => c.pdf_url));
+		for (const url of userPins) {
+			set.add(url);
 		}
-		return (Object.values(moreByGroup) as Chart[][]).reduce((n, arr) => n + arr.length, 0);
+		return allChartsOrdered.filter((c) => set.has(c.pdf_url));
 	});
+
+	function isPinned(chart: Chart): boolean {
+		return (
+			defaultPins.some((p) => p.pdf_url === chart.pdf_url) || isUserPinned(airportId, chart.pdf_url)
+		);
+	}
+
+	function onTogglePin(chart: Chart, e: MouseEvent) {
+		e.stopPropagation();
+		togglePin(airportId, chart.pdf_url);
+	}
 
 	function titleCase(s: string): string {
 		return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
@@ -111,50 +124,85 @@
 		</div>
 	</button>
 
-	{#if !collapsed}
-		<div class="border-t border-zinc-800/60 px-4 pt-2 pb-3">
-			{#if primary && primary.length > 0}
-				<ul class="flex flex-col gap-0.5 text-sm">
-					{#each primary as chart (chart.pdf_url)}
-						{@const isSelected =
-							!!selected &&
-							chart.chart_name === selected.chart_name &&
-							chart.pdf_url === selected.pdf_url}
-						<li>
-							<button
-								type="button"
-								aria-current={isSelected ? 'true' : undefined}
-								onclick={() => onPick(chart)}
-								class={[
-									'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1 text-left transition-colors',
-									isSelected
-										? 'bg-sky-500/15 text-sky-100'
-										: 'text-zinc-200 hover:bg-zinc-800/70 hover:text-zinc-50'
-								]}
-							>
-								<span class="truncate">{chart.chart_name}</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
-				{#if moreCount > 0}
+	{#if collapsed}
+		{#if effectivePins.length > 0}
+			<div class="flex flex-wrap gap-1 border-t border-zinc-800/60 px-3 py-2">
+				{#each effectivePins as chart (chart.pdf_url)}
+					{@const isSelected =
+						!!selected &&
+						chart.chart_name === selected.chart_name &&
+						chart.pdf_url === selected.pdf_url}
 					<button
 						type="button"
-						onclick={() => (showAllMore = !showAllMore)}
-						aria-expanded={showAllMore}
-						class="mt-3 w-full cursor-pointer rounded px-2 py-1 text-left text-[11px] font-semibold tracking-wider text-zinc-500 uppercase transition-colors hover:bg-zinc-800/50 hover:text-zinc-300"
+						aria-current={isSelected ? 'true' : undefined}
+						onclick={() => onPick(chart)}
+						class={[
+							'cursor-pointer rounded px-2 py-0.5 text-[11px] tracking-wide transition-colors',
+							isSelected
+								? 'bg-sky-500/20 text-sky-100'
+								: 'bg-zinc-800/60 text-zinc-300 hover:bg-sky-500/15 hover:text-sky-100'
+						]}
 					>
-						{showAllMore ? 'Show fewer' : `Show ${moreCount} more`}
+						{chart.chart_name}
 					</button>
-					{#if showAllMore && moreByGroup}
-						<div class="mt-2 border-t border-zinc-800/60 pt-2">
-							<ChartList byGroup={moreByGroup} {selected} {onPick} />
-						</div>
-					{/if}
+				{/each}
+			</div>
+		{/if}
+	{:else}
+		<div
+			class="flex max-h-[60vh] flex-col gap-3 overflow-y-auto border-t border-zinc-800/60 px-4 pt-2 pb-3 text-sm"
+		>
+			{#each CHART_GROUP_ORDER as group (group)}
+				{#if chartsByGroup[group].length > 0}
+					<div>
+						<h3 class="mb-1 text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">
+							{CHART_GROUP_LABELS[group]}
+						</h3>
+						<ul class="flex flex-col gap-0.5">
+							{#each chartsByGroup[group] as chart (chart.pdf_url)}
+								{@const isSelected =
+									!!selected &&
+									chart.chart_name === selected.chart_name &&
+									chart.pdf_url === selected.pdf_url}
+								{@const pinned = isPinned(chart)}
+								<li class="flex items-center gap-1">
+									<button
+										type="button"
+										aria-current={isSelected ? 'true' : undefined}
+										onclick={() => onPick(chart)}
+										class={[
+											'flex flex-1 cursor-pointer items-center gap-2 rounded px-2 py-1 text-left transition-colors',
+											isSelected
+												? 'bg-sky-500/15 text-sky-100'
+												: 'text-zinc-200 hover:bg-zinc-800/70 hover:text-zinc-50'
+										]}
+									>
+										<span class="truncate">{chart.chart_name}</span>
+									</button>
+									<button
+										type="button"
+										onclick={(e) => onTogglePin(chart, e)}
+										aria-label={pinned ? `Unpin ${chart.chart_name}` : `Pin ${chart.chart_name}`}
+										aria-pressed={pinned}
+										class={[
+											'shrink-0 cursor-pointer rounded p-1 transition-colors',
+											pinned
+												? 'text-sky-400 hover:bg-zinc-800/70 hover:text-sky-300'
+												: 'text-zinc-600 hover:bg-zinc-800/70 hover:text-zinc-300'
+										]}
+									>
+										{#if pinned}
+											<IconPin class="text-sm" />
+										{:else}
+											<IconPinOutline class="text-sm" />
+										{/if}
+									</button>
+								</li>
+							{/each}
+						</ul>
+					</div>
 				{/if}
-			{:else}
-				<ChartList byGroup={chartsByGroup} {selected} {onPick} />
-			{/if}
+			{/each}
 		</div>
 	{/if}
 </section>

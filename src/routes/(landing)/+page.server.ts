@@ -8,11 +8,12 @@ export type FlightChartSection = {
 	role: FlightChartRole;
 	filedId: string;
 	airport: AirportInfo;
-	// The full role-filtered chart set for this airport. ChartListCard renders
-	// `primary` first then computes the remainder of this set as "more".
+	// The full role-filtered chart set for this airport. ChartListCard shows
+	// this as the expanded list (with per-row pin toggles).
 	chartsByGroup: ChartsByGroup;
-	// Curated subset shown at the top of the card before the "Show more" toggle.
-	primary: Chart[];
+	// Server-curated high-confidence pins (e.g., airport diagram + matched
+	// SID/STAR). Rendered as chips when the card is collapsed.
+	defaultPins: Chart[];
 };
 
 const DIGIT_TO_WORD = [
@@ -104,16 +105,18 @@ function buildSection(
 ): FlightChartSection {
 	const roleFiltered = filterByRole(byGroup, role);
 	const diagram = roleFiltered.airport_diagram;
-	let primary: Chart[];
+	// High-confidence defaults: airport diagram is always relevant, plus the
+	// matched SID for departures or matched STAR for arrivals. Approaches stay
+	// unpinned by default — the user picks once they know the active runway.
+	let defaultPins: Chart[];
 	if (role === 'departure') {
-		primary = [...diagram, ...(matchedSid ? [matchedSid] : [])];
+		defaultPins = [...diagram, ...(matchedSid ? [matchedSid] : [])];
 	} else if (role === 'arrival') {
-		primary = [...diagram, ...(matchedStar ? [matchedStar] : []), ...roleFiltered.approach];
+		defaultPins = [...diagram, ...(matchedStar ? [matchedStar] : [])];
 	} else {
-		// alternate: airport diagram + all approaches.
-		primary = [...diagram, ...roleFiltered.approach];
+		defaultPins = [...diagram];
 	}
-	return { role, filedId, airport, chartsByGroup: roleFiltered, primary };
+	return { role, filedId, airport, chartsByGroup: roleFiltered, defaultPins };
 }
 
 export async function load({ parent, fetch }) {

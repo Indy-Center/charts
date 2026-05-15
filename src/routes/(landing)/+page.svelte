@@ -136,7 +136,7 @@
 					roleLabel={ROLE_LABEL[section.role]}
 					href={`/${faaId.toLowerCase()}`}
 					chartsByGroup={section.chartsByGroup}
-					primary={section.primary}
+					defaultPins={section.defaultPins}
 					onPick={(chart) => pickChart(faaId, chart)}
 				/>
 			{/each}
@@ -165,7 +165,7 @@
 {:else}
 	<!-- DEFAULT: centered hero. Logo + tagline + big search. Common airports as soft secondary affordance. -->
 	<div class="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center px-4 pt-20 sm:pt-28">
-		<img src="/indy-mark.svg" alt="Indy Center" class="mb-8 h-16 w-auto sm:h-20" />
+		<img src="/indy-mark-dark.svg" alt="Indy Center" class="mb-8 h-16 w-auto sm:h-20" />
 		<p class="mb-10 text-center text-sm text-zinc-400 sm:text-base">
 			FAA terminal procedure charts for the current AIRAC cycle.
 		</p>

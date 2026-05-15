@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import ChartListCard from '$lib/components/ChartListCard.svelte';
 import type { Chart, ChartsByGroup } from '$lib/types';
+import { __resetPinsForTests, isUserPinned } from '$lib/chart-pins';
 
 const mk = (n: string): Chart => ({
 	chart_name: n,
@@ -20,6 +21,10 @@ const byGroup: ChartsByGroup = {
 	arrival: []
 };
 
+beforeEach(() => {
+	__resetPinsForTests();
+});
+
 describe('ChartListCard', () => {
 	it('renders airport id and optional role label in the header', () => {
 		render(ChartListCard, {
@@ -35,38 +40,58 @@ describe('ChartListCard', () => {
 		expect(screen.getByText(/Louisville Muhammad Ali Intl/)).toBeInTheDocument();
 	});
 
-	it('collapses when the chevron is clicked, hiding the body', async () => {
+	it('renders the full chart list when expanded (default)', () => {
 		render(ChartListCard, {
 			airportId: 'KSDF',
 			chartsByGroup: byGroup,
 			selected: null,
 			onPick: () => {}
 		});
-		expect(screen.getByText('AIRPORT DIAGRAM')).toBeInTheDocument();
-		const toggle = screen.getByRole('button', { name: /collapse/i });
+		expect(screen.getByRole('button', { name: 'AIRPORT DIAGRAM' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'TAKEOFF MINIMUMS' })).toBeInTheDocument();
+	});
+
+	it('collapses when the header is clicked, hiding the chart list', async () => {
+		render(ChartListCard, {
+			airportId: 'KSDF',
+			chartsByGroup: byGroup,
+			selected: null,
+			onPick: () => {}
+		});
+		const toggle = screen.getByRole('button', { name: /collapse KSDF/i });
 		await fireEvent.click(toggle);
-		expect(screen.queryByText('AIRPORT DIAGRAM')).not.toBeInTheDocument();
-		// Header is still visible
+		expect(screen.queryByRole('button', { name: 'AIRPORT DIAGRAM' })).not.toBeInTheDocument();
+		// Header still visible
 		expect(screen.getByText('KSDF')).toBeInTheDocument();
 	});
 
-	it('renders primary list above a Show more toggle when primary is provided', async () => {
-		const primary = [byGroup.airport_diagram[0]!, byGroup.departure[0]!];
+	it('shows defaultPins as chips when collapsed', () => {
 		render(ChartListCard, {
 			airportId: 'KSDF',
 			chartsByGroup: byGroup,
-			primary,
+			defaultPins: [byGroup.airport_diagram[0]!, byGroup.departure[0]!],
+			defaultCollapsed: true,
 			selected: null,
 			onPick: () => {}
 		});
-		// Primary entries render at the top of the body.
-		expect(screen.getByRole('button', { name: /AIRPORT DIAGRAM/ })).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: /SPILR ONE/ })).toBeInTheDocument();
-		// 'TAKEOFF MINIMUMS' is in chartsByGroup but not in primary - hidden until expanded.
-		expect(screen.queryByRole('button', { name: /TAKEOFF MINIMUMS/ })).not.toBeInTheDocument();
-		const showMore = screen.getByRole('button', { name: /show \d+ more/i });
-		await fireEvent.click(showMore);
-		expect(screen.getByRole('button', { name: /TAKEOFF MINIMUMS/ })).toBeInTheDocument();
+		// Chips are buttons named after their chart, visible while collapsed
+		expect(screen.getByRole('button', { name: 'AIRPORT DIAGRAM' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'SPILR ONE (RNAV)' })).toBeInTheDocument();
+		// Unpinned charts are not visible while collapsed
+		expect(screen.queryByRole('button', { name: 'TAKEOFF MINIMUMS' })).not.toBeInTheDocument();
+	});
+
+	it('renders no chip strip when collapsed with no pins', () => {
+		render(ChartListCard, {
+			airportId: 'KSDF',
+			chartsByGroup: byGroup,
+			defaultCollapsed: true,
+			selected: null,
+			onPick: () => {}
+		});
+		// Only the header button is present
+		const buttons = screen.getAllByRole('button');
+		expect(buttons).toHaveLength(1);
 	});
 
 	it('emits onPick when a chart is clicked', async () => {
@@ -77,27 +102,26 @@ describe('ChartListCard', () => {
 			selected: null,
 			onPick
 		});
-		await fireEvent.click(screen.getByRole('button', { name: /AIRPORT DIAGRAM/ }));
+		await fireEvent.click(screen.getByRole('button', { name: 'AIRPORT DIAGRAM' }));
 		expect(onPick).toHaveBeenCalledOnce();
 		expect(onPick.mock.calls[0][0].chart_name).toBe('AIRPORT DIAGRAM');
 	});
 
-	it('marks the selected chart with aria-current in the primary list', () => {
+	it('marks the selected chart with aria-current', () => {
 		const diagram = byGroup.airport_diagram[0]!;
 		render(ChartListCard, {
 			airportId: 'KSDF',
 			chartsByGroup: byGroup,
-			primary: [diagram],
 			selected: diagram,
 			onPick: () => {}
 		});
-		expect(screen.getByRole('button', { name: /AIRPORT DIAGRAM/ })).toHaveAttribute(
+		expect(screen.getByRole('button', { name: 'AIRPORT DIAGRAM' })).toHaveAttribute(
 			'aria-current',
 			'true'
 		);
 	});
 
-	it('renders an airport-link header when href is provided', () => {
+	it('renders an Open link when href is provided', () => {
 		render(ChartListCard, {
 			airportId: 'KSDF',
 			href: '/ksdf',
@@ -107,5 +131,17 @@ describe('ChartListCard', () => {
 		});
 		const link = screen.getByRole('link');
 		expect(link.getAttribute('href')).toBe('/ksdf');
+	});
+
+	it('toggling the pin button updates the chart-pins store', async () => {
+		render(ChartListCard, {
+			airportId: 'KSDF',
+			chartsByGroup: byGroup,
+			selected: null,
+			onPick: () => {}
+		});
+		const pinBtn = screen.getByRole('button', { name: /^Pin AIRPORT DIAGRAM$/ });
+		await fireEvent.click(pinBtn);
+		expect(isUserPinned('KSDF', byGroup.airport_diagram[0]!.pdf_url)).toBe(true);
 	});
 });

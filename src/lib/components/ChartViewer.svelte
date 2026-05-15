@@ -49,8 +49,13 @@
 		});
 	}
 
-	const currentDisplay = $derived(
-		displayForm(airport.airport.faa_ident, airport.airport.icao_ident)
+	// Splice the current airport's data into the pinboard entry that's marked
+	// `isCurrent`. The server returns `airport: null` for that slot to avoid
+	// double-fetching — we fill it from the universal load's data here.
+	const resolvedPinboard = $derived(
+		pinboard.map((entry) =>
+			entry.isCurrent ? { ...entry, airport, defaultPins: entry.defaultPins } : entry
+		)
 	);
 </script>
 
@@ -80,27 +85,33 @@
 		<div
 			class="pointer-events-auto absolute top-3 bottom-3 left-3 flex w-72 flex-col gap-2 overflow-y-auto pr-1"
 		>
-			<ChartListCard
-				airportId={currentDisplay}
-				airportName={airport.airport.airport_name}
-				chartsByGroup={airport.chartsByGroup}
-				{selected}
-				onPick={(chart) => pickChart(chart)}
-			/>
-			{#each pinboard as entry (entry.id)}
-				{@const faaId = entry.airport.airport.faa_ident}
-				{@const display = displayForm(faaId, entry.airport.airport.icao_ident) || entry.id}
+			{#if resolvedPinboard.length === 0}
 				<ChartListCard
-					airportId={display}
-					airportName={entry.airport.airport.airport_name}
-					roleLabel={PINBOARD_ROLE_LABEL[entry.role]}
-					href={`/${faaId.toLowerCase()}`}
-					chartsByGroup={entry.airport.chartsByGroup}
-					selected={null}
-					onPick={(chart) => pickChart(chart, faaId)}
-					defaultCollapsed
+					airportId={displayForm(airport.airport.faa_ident, airport.airport.icao_ident)}
+					airportName={airport.airport.airport_name}
+					chartsByGroup={airport.chartsByGroup}
+					{selected}
+					onPick={(chart) => pickChart(chart)}
 				/>
-			{/each}
+			{:else}
+				{#each resolvedPinboard as entry (entry.id)}
+					{#if entry.airport}
+						{@const faaId = entry.airport.airport.faa_ident}
+						{@const display = displayForm(faaId, entry.airport.airport.icao_ident) || entry.id}
+						<ChartListCard
+							airportId={display}
+							airportName={entry.airport.airport.airport_name}
+							roleLabel={entry.isCurrent ? undefined : PINBOARD_ROLE_LABEL[entry.role]}
+							href={entry.isCurrent ? undefined : `/${faaId.toLowerCase()}`}
+							chartsByGroup={entry.airport.chartsByGroup}
+							defaultPins={entry.defaultPins}
+							selected={entry.isCurrent ? selected : null}
+							onPick={(chart) => pickChart(chart, faaId)}
+							defaultCollapsed={!entry.isCurrent}
+						/>
+					{/if}
+				{/each}
+			{/if}
 		</div>
 
 		{#if selected}
