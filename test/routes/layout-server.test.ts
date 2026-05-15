@@ -72,7 +72,7 @@ describe('+layout.server load', () => {
 		const session = withSession(null, flightPlan());
 		const result = await load(makeEvent(session));
 		expect(result.pinnedAirports.mode).toBe('flying');
-		expect(result.pinnedAirports.airports).toEqual(['KIND', 'KCMH']);
+		expect(result.pinnedAirports.airports).toEqual(['KCMH', 'KIND']);
 		expect(fetchSpy).not.toHaveBeenCalled();
 	});
 
