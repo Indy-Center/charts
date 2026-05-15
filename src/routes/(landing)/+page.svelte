@@ -46,6 +46,59 @@
 	function moreCount(more: { charts: Chart[] }[]): number {
 		return more.reduce((acc, g) => acc + g.charts.length, 0);
 	}
+
+	function formatAltitude(alt: string | undefined): string {
+		if (!alt) {
+			return '';
+		}
+		const num = parseInt(alt, 10);
+		if (isNaN(num)) {
+			return alt;
+		}
+		if (num >= 18000) {
+			return `FL${Math.round(num / 100)}`;
+		}
+		return `${num.toLocaleString()} ft`;
+	}
+
+	function formatDeptime(t: string | undefined): string {
+		if (!t || t.length !== 4) {
+			return '';
+		}
+		return `${t}z`;
+	}
+
+	function formatEnroute(t: string | undefined): string {
+		if (!t || t.length !== 4) {
+			return '';
+		}
+		return `${t.slice(0, 2)}:${t.slice(2)}`;
+	}
+
+	const flightPlan = $derived(data.session?.activeFlightPlan ?? null);
+
+	const fpMeta = $derived.by(() => {
+		if (!flightPlan) {
+			return [];
+		}
+		const parts: string[] = [];
+		if (flightPlan.aircraft_short || flightPlan.aircraft_faa || flightPlan.aircraft) {
+			parts.push(flightPlan.aircraft_short ?? flightPlan.aircraft_faa ?? flightPlan.aircraft ?? '');
+		}
+		const alt = formatAltitude(flightPlan.altitude);
+		if (alt) {
+			parts.push(alt);
+		}
+		const dep = formatDeptime(flightPlan.deptime);
+		if (dep) {
+			parts.push(dep);
+		}
+		const enr = formatEnroute(flightPlan.enroute_time);
+		if (enr) {
+			parts.push(`${enr} enroute`);
+		}
+		return parts;
+	});
 </script>
 
 {#if mode === 'flying' && data.flightCharts}
@@ -54,6 +107,44 @@
 		<h2 class="mb-6 text-center text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase">
 			Your flight
 		</h2>
+
+		{#if flightPlan}
+			<section
+				aria-label="Filed flight plan"
+				class="mb-6 rounded-lg border border-zinc-800/60 bg-zinc-900/85 px-4 py-3 shadow-lg backdrop-blur-md sm:px-5"
+			>
+				<div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+					<div
+						class="flex items-baseline gap-2 font-mono text-base font-semibold tracking-wider text-zinc-100"
+					>
+						<span>{flightPlan.departure}</span>
+						<span class="text-zinc-600">→</span>
+						<span>{flightPlan.arrival}</span>
+						{#if flightPlan.alternate && flightPlan.alternate.trim()}
+							<span class="text-xs font-normal tracking-normal text-zinc-500">
+								alt {flightPlan.alternate}
+							</span>
+						{/if}
+					</div>
+					{#if fpMeta.length > 0}
+						<div class="flex flex-wrap items-baseline gap-x-2 text-xs text-zinc-400">
+							{#each fpMeta as part, i (i)}
+								{#if i > 0}
+									<span class="text-zinc-700">·</span>
+								{/if}
+								<span>{part}</span>
+							{/each}
+						</div>
+					{/if}
+				</div>
+				{#if flightPlan.route}
+					<p class="mt-2 font-mono text-xs leading-relaxed break-words text-zinc-400">
+						{flightPlan.route}
+					</p>
+				{/if}
+			</section>
+		{/if}
+
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each data.flightCharts as section (section.role)}
 				{@const faaId = section.airport.faa_ident}
