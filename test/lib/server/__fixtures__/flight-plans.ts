@@ -5,7 +5,7 @@ export function flightPlan(overrides: Partial<FlightPlan> = {}): FlightPlan {
 	return {
 		departure: 'KIND',
 		arrival: 'KCMH',
-		alternate: 'KDAY',
+		alternate: '',
 		flight_rules: 'I',
 		aircraft: 'B738/L',
 		...overrides
