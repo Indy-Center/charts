@@ -104,19 +104,15 @@ export function togglePin(
 }
 
 /**
- * Mark an airport as tracked. Re-tracking an existing airport moves it to the
- * front of `trackOrder` so the most-recent open is always at the top of the
- * follower row.
+ * Mark an airport as tracked. First-time tracking unshifts the airport to the
+ * top of `trackOrder`; revisits are no-ops so cycling between two airports
+ * doesn't make them swap positions in the follower row.
  */
 export function trackAirport(airportId: string, airportName?: string): void {
 	const k = key(airportId);
 	ensureState(airportId, airportName);
-	const idx = trackOrder.indexOf(k);
-	if (idx === 0) {
-		return; // already at the top — nothing to do
-	}
-	if (idx > 0) {
-		trackOrder.splice(idx, 1);
+	if (trackOrder.includes(k)) {
+		return;
 	}
 	trackOrder.unshift(k);
 }
