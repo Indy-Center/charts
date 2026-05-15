@@ -1,6 +1,10 @@
+<!-- src/routes/+layout.svelte -->
 <script lang="ts">
 	import '../app.css';
-	let { children } = $props();
+	import Header from '$lib/components/Header.svelte';
+	import { page } from '$app/state';
+
+	let { data, children } = $props();
 
 	function onKeydown(e: KeyboardEvent) {
 		const isInput =
@@ -19,4 +23,9 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-{@render children()}
+<div class="flex min-h-screen w-full flex-col bg-zinc-900">
+	<Header user={data.session?.user ?? null} currentPath={page.url.pathname} />
+	<div class="flex min-h-0 flex-1 flex-col">
+		{@render children()}
+	</div>
+</div>
