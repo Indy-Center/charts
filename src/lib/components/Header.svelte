@@ -35,8 +35,7 @@
 			aria-label="Indy Center home"
 			class="flex shrink-0 cursor-pointer items-center transition-opacity hover:opacity-80"
 		>
-			<img src="/indy-mark.svg" alt="" class="h-7 w-auto sm:hidden" />
-			<img src="/indy-full.svg" alt="Indy Center" class="hidden h-7 w-auto sm:block" />
+			<img src="/indy-mark.svg" alt="Indy Center" class="h-8 w-auto" />
 		</a>
 
 		<div class="min-w-0 flex-1">

@@ -61,7 +61,7 @@
 	<title>{pageTitle}</title>
 </svelte:head>
 
-<ChartViewer airport={data.airport} selected={data.selected} />
+<ChartViewer airport={data.airport} selected={data.selected} pinboard={data.pinboard} />
 
 {#if data.slugError && showSlugError}
 	<div

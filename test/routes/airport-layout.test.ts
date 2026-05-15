@@ -15,7 +15,8 @@ function makeEvent(airport: string, fetchImpl: typeof fetch) {
 		params: { airport },
 		fetch: fetchImpl,
 		url: new URL(`http://test/${airport}`),
-		route: { id: '/[airport]' }
+		route: { id: '/[airport]' },
+		data: { pinboard: [] }
 	} as unknown as Parameters<typeof load>[0];
 }
 

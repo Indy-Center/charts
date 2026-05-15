@@ -5,41 +5,37 @@
 	import { DEFAULT_VIEW_STATE } from '$lib/types';
 	import { chartToSlug } from '$lib/slug';
 	import { parsedDocs, viewStates } from '$lib/viewer-cache';
-	import OverlayCard from './OverlayCard.svelte';
 	import ChartCanvas from './ChartCanvas.svelte';
-	import ChartList from './ChartList.svelte';
+	import ChartListCard from './ChartListCard.svelte';
 	import ChartMeta from './ChartMeta.svelte';
 	import ViewControls from './ViewControls.svelte';
-	import IconList from '~icons/mdi/format-list-bulleted';
+	import { displayForm } from '$lib/airport-id';
+	import { PINBOARD_ROLE_LABEL, type PinboardEntry } from '$lib/pinboard';
 
 	let {
 		airport,
-		selected
+		selected,
+		pinboard = []
 	}: {
 		airport: AirportData;
 		selected: Chart | null;
+		pinboard?: PinboardEntry[];
 	} = $props();
 
 	let totalPages = $state(1);
 	let currentPage = $state(1);
 
-	function titleCase(s: string): string {
-		return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-	}
-
-	const overlayTitle = $derived.by(() => {
-		const code = airport.airport.faa_ident;
-		const name = airport.airport.airport_name;
-		return name ? `${code} · ${titleCase(name)}` : code;
-	});
-
 	const view = $derived.by((): ViewState => {
-		if (!selected) return { ...DEFAULT_VIEW_STATE };
+		if (!selected) {
+			return { ...DEFAULT_VIEW_STATE };
+		}
 		return viewStates.get(selected.pdf_url) ?? { ...DEFAULT_VIEW_STATE };
 	});
 
 	function onCanvasChange(next: ViewState) {
-		if (!selected) return;
+		if (!selected) {
+			return;
+		}
 		viewStates.set(selected.pdf_url, next);
 	}
 
@@ -52,6 +48,10 @@
 			keepFocus: true
 		});
 	}
+
+	const currentDisplay = $derived(
+		displayForm(airport.airport.faa_ident, airport.airport.icao_ident)
+	);
 </script>
 
 <div class="relative min-h-0 w-full flex-1 overflow-hidden bg-zinc-950">
@@ -77,13 +77,30 @@
 	{/if}
 
 	<div class="pointer-events-none absolute inset-0">
-		<div class="absolute top-3 left-3 flex w-72 flex-col gap-2">
-			<OverlayCard title={overlayTitle}>
-				{#snippet icon()}<IconList class="text-lg" />{/snippet}
-				<div class="flex max-h-[60vh] flex-col">
-					<ChartList byGroup={airport.chartsByGroup} {selected} onPick={pickChart} />
-				</div>
-			</OverlayCard>
+		<div
+			class="pointer-events-auto absolute top-3 bottom-3 left-3 flex w-72 flex-col gap-2 overflow-y-auto pr-1"
+		>
+			<ChartListCard
+				airportId={currentDisplay}
+				airportName={airport.airport.airport_name}
+				chartsByGroup={airport.chartsByGroup}
+				{selected}
+				onPick={(chart) => pickChart(chart)}
+			/>
+			{#each pinboard as entry (entry.id)}
+				{@const faaId = entry.airport.airport.faa_ident}
+				{@const display = displayForm(faaId, entry.airport.airport.icao_ident) || entry.id}
+				<ChartListCard
+					airportId={display}
+					airportName={entry.airport.airport.airport_name}
+					roleLabel={PINBOARD_ROLE_LABEL[entry.role]}
+					href={`/${faaId.toLowerCase()}`}
+					chartsByGroup={entry.airport.chartsByGroup}
+					selected={null}
+					onPick={(chart) => pickChart(chart, faaId)}
+					defaultCollapsed
+				/>
+			{/each}
 		</div>
 
 		{#if selected}
@@ -95,7 +112,7 @@
 		{/if}
 
 		<p
-			class="pointer-events-none absolute bottom-3 left-3 max-w-[18rem] text-[10px] leading-snug text-zinc-600"
+			class="pointer-events-none absolute right-3 bottom-14 max-w-[18rem] text-right text-[10px] leading-snug text-zinc-600"
 		>
 			Not affiliated with the FAA. Approved only for use on the VATSIM network.
 		</p>

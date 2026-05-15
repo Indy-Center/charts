@@ -74,43 +74,42 @@
 	aria-label={`${airportId}${roleLabel ? ` (${roleLabel})` : ''}`}
 	class="rounded-lg border border-zinc-800/60 bg-zinc-900/85 shadow-lg backdrop-blur-md"
 >
-	<header class="flex items-center justify-between gap-2 px-4 py-3">
+	<button
+		type="button"
+		aria-expanded={!collapsed}
+		aria-label={collapsed ? `Expand ${airportId}` : `Collapse ${airportId}`}
+		onclick={() => (collapsed = !collapsed)}
+		class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-t-lg px-4 py-3 text-left transition-colors hover:bg-zinc-800/40"
+	>
 		<div class="flex min-w-0 items-baseline gap-2">
-			{#if href}
-				<a {href} class="flex min-w-0 items-baseline gap-2 hover:text-sky-300">
-					<span class="font-mono text-sm font-semibold tracking-wider text-zinc-100">
-						{airportId}
-					</span>
-					{#if airportName}
-						<span class="truncate text-xs text-zinc-500">{titleCase(airportName)}</span>
-					{/if}
-				</a>
-			{:else}
-				<span class="font-mono text-sm font-semibold tracking-wider text-zinc-100">
-					{airportId}
-				</span>
-				{#if airportName}
-					<span class="truncate text-xs text-zinc-500">{titleCase(airportName)}</span>
-				{/if}
+			<span class="font-mono text-sm font-semibold tracking-wider text-zinc-100">
+				{airportId}
+			</span>
+			{#if airportName}
+				<span class="truncate text-xs text-zinc-500">{titleCase(airportName)}</span>
 			{/if}
 		</div>
 		<div class="flex shrink-0 items-center gap-2">
+			{#if href}
+				<a
+					{href}
+					onclick={(e) => e.stopPropagation()}
+					aria-label={`Open ${airportId} chart viewer`}
+					class="cursor-pointer rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-zinc-500 uppercase transition-colors hover:bg-zinc-800/60 hover:text-sky-300"
+				>
+					Open
+				</a>
+			{/if}
 			{#if roleLabel}
 				<span class="text-[10px] font-semibold tracking-[0.18em] text-sky-400 uppercase">
 					{roleLabel}
 				</span>
 			{/if}
-			<button
-				type="button"
-				aria-label={collapsed ? 'Expand' : 'Collapse'}
-				aria-expanded={!collapsed}
-				onclick={() => (collapsed = !collapsed)}
-				class="cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-800/60 hover:text-zinc-200"
-			>
-				<IconChevron class={`text-base transition-transform ${collapsed ? '-rotate-90' : ''}`} />
-			</button>
+			<IconChevron
+				class={`text-base text-zinc-500 transition-transform ${collapsed ? '-rotate-90' : ''}`}
+			/>
 		</div>
-	</header>
+	</button>
 
 	{#if !collapsed}
 		<div class="border-t border-zinc-800/60 px-4 pt-2 pb-3">
