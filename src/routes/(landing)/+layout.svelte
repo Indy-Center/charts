@@ -1,15 +1,22 @@
 <!-- src/routes/(landing)/+layout.svelte -->
 <script lang="ts">
+	import Header from '$lib/components/Header.svelte';
 	import UserChip from '$lib/components/UserChip.svelte';
 	import { page } from '$app/state';
 
 	let { data, children } = $props();
+
+	const hasActiveMode = $derived(data.pinnedAirports.mode !== 'none');
 </script>
 
 <div class="flex flex-1 flex-col">
-	<div class="absolute top-3 right-3 z-10 sm:top-4 sm:right-4">
-		<UserChip user={data.session?.user ?? null} currentPath={page.url.pathname} />
-	</div>
+	{#if hasActiveMode}
+		<Header user={data.session?.user ?? null} currentPath={page.url.pathname} />
+	{:else}
+		<div class="absolute top-3 right-3 z-10 sm:top-4 sm:right-4">
+			<UserChip user={data.session?.user ?? null} currentPath={page.url.pathname} />
+		</div>
+	{/if}
 
 	<main class="flex flex-1 flex-col">
 		{@render children()}

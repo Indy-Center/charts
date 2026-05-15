@@ -25,13 +25,18 @@
 
 	const inputClass = $derived(
 		size === 'lg'
-			? 'w-full rounded-lg border border-zinc-700/50 bg-zinc-800/50 py-3.5 pr-14 pl-11 text-base text-zinc-100 uppercase transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-600/50 focus:bg-zinc-800 focus:outline-none'
+			? 'w-full rounded-full border border-zinc-700/40 bg-zinc-900/40 py-4 pr-16 pl-14 text-base tracking-wide text-zinc-100 uppercase shadow-xl shadow-black/40 backdrop-blur-md transition-all placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-500/40 focus:bg-zinc-900/60 focus:shadow-2xl focus:shadow-sky-500/10 focus:outline-none'
 			: 'w-full rounded-md border border-zinc-700/50 bg-zinc-800/50 py-1.5 pr-12 pl-8 text-sm text-zinc-100 uppercase transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-600/50 focus:bg-zinc-800 focus:outline-none'
 	);
 
-	const iconClass = $derived(size === 'lg' ? 'text-xl' : 'text-sm');
-	const iconLeftClass = $derived(size === 'lg' ? 'left-4' : 'left-2.5');
-	const trailingRightClass = $derived(size === 'lg' ? 'right-3' : 'right-2');
+	const iconClass = $derived(size === 'lg' ? 'text-2xl' : 'text-sm');
+	const iconLeftClass = $derived(size === 'lg' ? 'left-5' : 'left-2.5');
+	const trailingRightClass = $derived(size === 'lg' ? 'right-4' : 'right-2');
+	const menuClass = $derived(
+		size === 'lg'
+			? 'absolute top-full right-0 left-0 z-50 mt-2 max-h-[60vh] overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-900/95 text-sm shadow-2xl backdrop-blur-md'
+			: 'absolute top-full right-0 left-0 z-50 mt-1 max-h-[60vh] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 text-sm shadow-lg'
+	);
 
 	const {
 		elements: { menu, input, option, label },
@@ -283,10 +288,7 @@
 	{/if}
 
 	{#if $open}
-		<ul
-			use:melt={$menu}
-			class="absolute top-full right-0 left-0 z-50 mt-1 max-h-[60vh] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 text-sm shadow-lg"
-		>
+		<ul use:melt={$menu} class={menuClass}>
 			{#each rows as row (row.kind === 'airport' ? `a:${row.id}` : `c:${row.chart.chart_name}:${row.chart.pdf_url}`)}
 				<li
 					use:melt={$option({

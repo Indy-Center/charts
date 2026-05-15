@@ -76,12 +76,6 @@ describe('ChartList', () => {
 		);
 	});
 
-	it('shows did_change badge', () => {
-		render(ChartList, { byGroup: groups, selected: null, onPick: () => {} });
-		const ils = screen.getByRole('button', { name: /ILS RWY 05L/ });
-		expect(ils.querySelector('[aria-label="Changed this cycle"]')).toBeTruthy();
-	});
-
 	it('calls onPick with the chart when clicked', async () => {
 		const onPick = vi.fn();
 		render(ChartList, { byGroup: groups, selected: null, onPick });

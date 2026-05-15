@@ -91,12 +91,7 @@
 				<ViewControls {view} onChange={onCanvasChange} />
 			</div>
 
-			<ChartMeta
-				name={selected.chart_name}
-				didChange={selected.did_change}
-				page={currentPage}
-				{totalPages}
-			/>
+			<ChartMeta name={selected.chart_name} page={currentPage} {totalPages} />
 		{/if}
 
 		<p
