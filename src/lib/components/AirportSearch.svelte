@@ -15,11 +15,23 @@
 
 	let {
 		onSelectAirport,
-		onSelectChart
+		onSelectChart,
+		size = 'sm'
 	}: {
 		onSelectAirport: (faaId: string) => void;
 		onSelectChart: (faaId: string, chart: Chart) => void;
+		size?: 'sm' | 'lg';
 	} = $props();
+
+	const inputClass = $derived(
+		size === 'lg'
+			? 'w-full rounded-lg border border-zinc-700/50 bg-zinc-800/50 py-3.5 pr-14 pl-11 text-base text-zinc-100 uppercase transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-600/50 focus:bg-zinc-800 focus:outline-none'
+			: 'w-full rounded-md border border-zinc-700/50 bg-zinc-800/50 py-1.5 pr-12 pl-8 text-sm text-zinc-100 uppercase transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-600/50 focus:bg-zinc-800 focus:outline-none'
+	);
+
+	const iconClass = $derived(size === 'lg' ? 'text-xl' : 'text-sm');
+	const iconLeftClass = $derived(size === 'lg' ? 'left-4' : 'left-2.5');
+	const trailingRightClass = $derived(size === 'lg' ? 'right-3' : 'right-2');
 
 	const {
 		elements: { menu, input, option, label },
@@ -223,8 +235,10 @@
 
 <div class="relative">
 	<label use:melt={$label} class="sr-only">Search airport or chart</label>
-	<span class="pointer-events-none absolute top-1/2 left-2.5 flex -translate-y-1/2 text-zinc-500">
-		<IconSearch class="text-sm" />
+	<span
+		class="pointer-events-none absolute top-1/2 flex -translate-y-1/2 text-zinc-500 {iconLeftClass}"
+	>
+		<IconSearch class={iconClass} />
 	</span>
 	<input
 		use:melt={$input}
@@ -238,10 +252,10 @@
 		placeholder="Search airport, then / for charts..."
 		autocomplete="off"
 		spellcheck="false"
-		class="w-full rounded-md border border-zinc-700/50 bg-zinc-800/50 py-1.5 pr-12 pl-8 text-sm text-zinc-100 uppercase transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-600/50 focus:bg-zinc-800 focus:outline-none"
+		class={inputClass}
 	/>
 	<div
-		class="pointer-events-none absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-1"
+		class="pointer-events-none absolute top-1/2 flex -translate-y-1/2 items-center gap-1 {trailingRightClass}"
 	>
 		{#if $inputValue}
 			<button
