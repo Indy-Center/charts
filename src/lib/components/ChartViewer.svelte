@@ -1,3 +1,4 @@
+<!-- src/lib/components/ChartViewer.svelte -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import type { AirportData, Chart, ViewState } from '$lib/types';
@@ -9,9 +10,7 @@
 	import ChartList from './ChartList.svelte';
 	import ChartMeta from './ChartMeta.svelte';
 	import ViewControls from './ViewControls.svelte';
-	import AirportSearch from './AirportSearch.svelte';
 	import IconList from '~icons/mdi/format-list-bulleted';
-	import IconHome from '~icons/mdi/home-outline';
 
 	let {
 		airport,
@@ -53,13 +52,9 @@
 			keepFocus: true
 		});
 	}
-
-	function pickAirport(faaId: string) {
-		goto(`/${faaId.toLowerCase()}`);
-	}
 </script>
 
-<div class="relative h-screen w-screen overflow-hidden bg-zinc-950">
+<div class="relative min-h-0 w-full flex-1 overflow-hidden bg-zinc-950">
 	{#if selected}
 		{#key selected.pdf_url}
 			<ChartCanvas
@@ -83,10 +78,6 @@
 
 	<div class="pointer-events-none absolute inset-0">
 		<div class="absolute top-3 left-3 flex w-72 flex-col gap-2">
-			<div class="pointer-events-auto">
-				<AirportSearch onSelectAirport={pickAirport} onSelectChart={(id, c) => pickChart(c, id)} />
-			</div>
-
 			<OverlayCard title={overlayTitle}>
 				{#snippet icon()}<IconList class="text-lg" />{/snippet}
 				<div class="flex max-h-[60vh] flex-col">
@@ -94,15 +85,6 @@
 				</div>
 			</OverlayCard>
 		</div>
-
-		<a
-			href="/"
-			aria-label="Back to home"
-			title="Back to home"
-			class="pointer-events-auto absolute top-3 right-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-zinc-800/60 bg-zinc-900/85 text-zinc-300 backdrop-blur-md transition-colors hover:text-sky-300"
-		>
-			<IconHome class="text-base" />
-		</a>
 
 		{#if selected}
 			<div class="pointer-events-auto absolute right-3 bottom-3">
