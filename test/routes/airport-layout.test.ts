@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('$app/environment', () => ({ browser: false }));
 
-import { load } from '../../src/routes/[airport]/+layout';
+import { load } from '../../src/routes/(viewer)/[airport]/+layout';
 import type { AirportData } from '$lib/types';
 
 const sampleData: AirportData = {
