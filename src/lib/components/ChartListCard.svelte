@@ -15,14 +15,27 @@
 	import IconChevron from '~icons/mdi/chevron-down';
 	import IconPin from '~icons/mdi/pin';
 	import IconPinOutline from '~icons/mdi/pin-outline';
+	import IconTakeoff from '~icons/mdi/airplane-takeoff';
+	import IconLanding from '~icons/mdi/airplane-landing';
+	import IconAirport from '~icons/mdi/airport';
+	import IconTower from '~icons/mdi/radio-tower';
 	import { CHART_GROUP_LABELS, CHART_GROUP_ORDER } from '$lib/types';
 	import type { Chart, ChartsByGroup } from '$lib/types';
 	import { isUserPinned, togglePin, userPinsFor } from '$lib/chart-pins';
 
+	export type CardRole = 'departure' | 'arrival' | 'alternate' | 'controlling';
+
+	const ROLE_LABEL: Record<CardRole, string> = {
+		departure: 'Departure',
+		arrival: 'Arrival',
+		alternate: 'Alternate',
+		controlling: 'Controlling'
+	};
+
 	let {
 		airportId,
 		airportName,
-		roleLabel,
+		role,
 		href,
 		chartsByGroup,
 		defaultPins = [],
@@ -32,7 +45,7 @@
 	}: {
 		airportId: string;
 		airportName?: string;
-		roleLabel?: string;
+		role?: CardRole;
 		href?: string;
 		chartsByGroup: ChartsByGroup;
 		defaultPins?: Chart[];
@@ -43,6 +56,11 @@
 
 	// svelte-ignore state_referenced_locally
 	let collapsed = $state(defaultCollapsed);
+
+	// Note: `collapsed` is initialised once from `defaultCollapsed` and then
+	// owned by user toggles. We deliberately don't resync on prop changes so
+	// that a user's manual expand/collapse choice survives navigation between
+	// airports.
 
 	// Effective pins = server defaults ∪ user-toggled, deduped by pdf_url and
 	// rendered in the order charts appear in chartsByGroup so the chip order
@@ -84,7 +102,7 @@
 </script>
 
 <section
-	aria-label={`${airportId}${roleLabel ? ` (${roleLabel})` : ''}`}
+	aria-label={`${airportId}${role ? ` (${ROLE_LABEL[role]})` : ''}`}
 	class="rounded-lg border border-zinc-800/60 bg-zinc-900/85 shadow-lg backdrop-blur-md"
 >
 	<button
@@ -94,28 +112,41 @@
 		onclick={() => (collapsed = !collapsed)}
 		class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-t-lg px-4 py-3 text-left transition-colors hover:bg-zinc-800/40"
 	>
-		<div class="flex min-w-0 items-baseline gap-2">
-			<span class="font-mono text-sm font-semibold tracking-wider text-zinc-100">
-				{airportId}
-			</span>
-			{#if airportName}
-				<span class="truncate text-xs text-zinc-500">{titleCase(airportName)}</span>
-			{/if}
-		</div>
-		<div class="flex shrink-0 items-center gap-2">
+		<div class="flex min-w-0 flex-wrap items-baseline gap-x-2">
 			{#if href}
 				<a
 					{href}
 					onclick={(e) => e.stopPropagation()}
 					aria-label={`Open ${airportId} chart viewer`}
-					class="cursor-pointer rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-zinc-500 uppercase transition-colors hover:bg-zinc-800/60 hover:text-sky-300"
+					class="cursor-pointer font-mono text-sm font-semibold tracking-wider text-zinc-100 hover:text-sky-300"
 				>
-					Open
+					{airportId}
 				</a>
+			{:else}
+				<span class="font-mono text-sm font-semibold tracking-wider text-zinc-100">
+					{airportId}
+				</span>
 			{/if}
-			{#if roleLabel}
-				<span class="text-[10px] font-semibold tracking-[0.18em] text-sky-400 uppercase">
-					{roleLabel}
+			{#if airportName}
+				<span class="text-xs text-zinc-500">{titleCase(airportName)}</span>
+			{/if}
+		</div>
+		<div class="flex shrink-0 items-center gap-2">
+			{#if role}
+				<span
+					aria-label={ROLE_LABEL[role]}
+					title={ROLE_LABEL[role]}
+					class="flex items-center text-sky-400"
+				>
+					{#if role === 'departure'}
+						<IconTakeoff class="text-base" />
+					{:else if role === 'arrival'}
+						<IconLanding class="text-base" />
+					{:else if role === 'alternate'}
+						<IconAirport class="text-base" />
+					{:else}
+						<IconTower class="text-base" />
+					{/if}
 				</span>
 			{/if}
 			<IconChevron
@@ -137,7 +168,7 @@
 						aria-current={isSelected ? 'true' : undefined}
 						onclick={() => onPick(chart)}
 						class={[
-							'cursor-pointer rounded px-2 py-0.5 text-[11px] tracking-wide transition-colors',
+							'cursor-pointer rounded border border-transparent px-1.5 py-0.5 text-[11px] font-medium tracking-wide whitespace-nowrap transition-colors',
 							isSelected
 								? 'bg-sky-500/20 text-sky-100'
 								: 'bg-zinc-800/60 text-zinc-300 hover:bg-sky-500/15 hover:text-sky-100'

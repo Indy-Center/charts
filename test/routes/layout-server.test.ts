@@ -63,7 +63,9 @@ describe('+layout.server load', () => {
 		mockTreeFetch();
 		const session = withSession(towerController('IND'), null);
 		const result = await load(makeEvent(session));
-		expect(result.pinnedAirports.airports).toEqual(['IND']);
+		// IND in the zid-tree fixture is an AtctTracon with BAK as a child Atct.
+		// The pinned-airports walker collects both.
+		expect(result.pinnedAirports.airports).toEqual(['BAK', 'IND']);
 		expect(result.pinnedAirports.mode).toBe('controlling');
 	});
 

@@ -23,8 +23,8 @@ describe('findFacility', () => {
 	});
 
 	it('finds a nested child by id (DFS)', () => {
-		expect(findFacility(zidTree, 'IND')?.name).toBe('Indianapolis Tower');
-		expect(findFacility(zidTree, 'S56')?.name).toBe('Indianapolis Approach');
+		expect(findFacility(zidTree, 'IND')?.name).toBe('Indianapolis ATCT/TRACON');
+		expect(findFacility(zidTree, 'BAK')?.name).toBe('Columbus Muni ATCT');
 	});
 
 	it('returns null for an unknown id', () => {
@@ -33,27 +33,27 @@ describe('findFacility', () => {
 });
 
 describe('collectAtctDescendants', () => {
-	it('returns just the node when the node is itself an ATCT', () => {
+	it('returns just the node when the node is itself an Atct (pure tower)', () => {
+		const bak = findFacility(zidTree, 'BAK')!;
+		expect(collectAtctDescendants(bak).map((f) => f.id)).toEqual(['BAK']);
+	});
+
+	it('returns an AtctTracon plus its Atct children', () => {
 		const ind = findFacility(zidTree, 'IND')!;
-		expect(collectAtctDescendants(ind).map((f) => f.id)).toEqual(['IND']);
-	});
-
-	it('returns all ATCT descendants of a TRACON', () => {
-		const tracon = findFacility(zidTree, 'S56')!;
-		const atcts = collectAtctDescendants(tracon)
+		const ids = collectAtctDescendants(ind)
 			.map((f) => f.id)
 			.sort();
-		expect(atcts).toEqual(['EVV', 'IND']);
+		expect(ids).toEqual(['BAK', 'IND']);
 	});
 
-	it('returns all ATCT descendants of the ARTCC', () => {
-		const atcts = collectAtctDescendants(zidTree)
+	it('returns all airports under the ARTCC, including AtctTracon and Atct types', () => {
+		const ids = collectAtctDescendants(zidTree)
 			.map((f) => f.id)
 			.sort();
-		expect(atcts).toEqual(['EVV', 'IND']);
+		expect(ids).toEqual(['BAK', 'EVV', 'IND']);
 	});
 
-	it('returns an empty list when no ATCTs are below the node', () => {
+	it('returns an empty list when no airports are below the node', () => {
 		const subset = findFacility(zidTree, 'ZID_subset')!;
 		expect(collectAtctDescendants(subset)).toEqual([]);
 	});

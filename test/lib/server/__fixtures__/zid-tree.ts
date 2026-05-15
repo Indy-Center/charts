@@ -1,30 +1,37 @@
 // test/lib/server/__fixtures__/zid-tree.ts
 import type { Facility } from '../../../../src/lib/server/artcc-tree';
 
-// Minimal ZID-shaped tree:
-//   ZID (ARTCC)
-//     S56 (TRACON)
-//       IND (ATCT)
-//       EVV (ATCT)
-//     ZID_subset (ARTCC subset, no airports under it)
+// Minimal ZID-shaped tree mirroring the real data-api.vnas.vatsim.net shape.
+// In production ZID has AtctTracon facilities (combined tower+approach) with
+// pure Atct child facilities. Both count as airports.
+//   ZID (Artcc)
+//     IND (AtctTracon)  ← Indianapolis combined tower+approach
+//       BAK (Atct)        ← Columbus Muni tower (a child of IND)
+//     EVV (AtctTracon)  ← Evansville combined tower+approach
+//     ZID_subset (Artcc) — no airports under it
 
 export const zidTree: Facility = {
 	id: 'ZID',
-	type: 'ARTCC',
+	type: 'Artcc',
 	name: 'Indianapolis Center',
 	childFacilities: [
 		{
-			id: 'S56',
-			type: 'TRACON',
-			name: 'Indianapolis Approach',
+			id: 'IND',
+			type: 'AtctTracon',
+			name: 'Indianapolis ATCT/TRACON',
 			childFacilities: [
-				{ id: 'IND', type: 'ATCT', name: 'Indianapolis Tower', childFacilities: [] },
-				{ id: 'EVV', type: 'ATCT', name: 'Evansville Tower', childFacilities: [] }
+				{ id: 'BAK', type: 'Atct', name: 'Columbus Muni ATCT', childFacilities: [] }
 			]
 		},
 		{
+			id: 'EVV',
+			type: 'AtctTracon',
+			name: 'Evansville ATCT/TRACON',
+			childFacilities: []
+		},
+		{
 			id: 'ZID_subset',
-			type: 'ARTCC',
+			type: 'Artcc',
 			name: 'Subset',
 			childFacilities: []
 		}

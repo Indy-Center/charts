@@ -26,17 +26,18 @@ beforeEach(() => {
 });
 
 describe('ChartListCard', () => {
-	it('renders airport id and optional role label in the header', () => {
+	it('renders airport id and the role icon (with aria-label) in the header', () => {
 		render(ChartListCard, {
 			airportId: 'KSDF',
 			airportName: 'LOUISVILLE MUHAMMAD ALI INTL',
-			roleLabel: 'Departure',
+			role: 'departure',
 			chartsByGroup: byGroup,
 			selected: null,
 			onPick: () => {}
 		});
 		expect(screen.getByText('KSDF')).toBeInTheDocument();
-		expect(screen.getByText('Departure')).toBeInTheDocument();
+		// Role surfaces as an aria-labelled icon, not visible text.
+		expect(screen.getByLabelText('Departure')).toBeInTheDocument();
 		expect(screen.getByText(/Louisville Muhammad Ali Intl/)).toBeInTheDocument();
 	});
 

@@ -79,10 +79,15 @@ export function findFacility(root: Facility, id: string): Facility | null {
 	return null;
 }
 
+// The live vNAS feed uses `Atct` for tower-only facilities and `AtctTracon`
+// for combined tower+approach facilities. Both count as airports for the
+// purpose of pinning charts.
+const AIRPORT_TYPES = new Set(['Atct', 'AtctTracon']);
+
 export function collectAtctDescendants(root: Facility): Facility[] {
 	const out: Facility[] = [];
 	function walk(f: Facility) {
-		if (f.type === 'ATCT') {
+		if (AIRPORT_TYPES.has(f.type)) {
 			out.push(f);
 		}
 		for (const c of f.childFacilities) {

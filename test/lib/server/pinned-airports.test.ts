@@ -63,28 +63,32 @@ describe('pinnedAirports', () => {
 			expect(pinnedAirports(withSession(inactivePosition('IND')), zidTree).airports).toEqual([]);
 		});
 
-		it('returns just the airport for a tower position', () => {
+		it('returns the airport plus its child ATCTs when controlling a combined AtctTracon', () => {
+			// IND in the fixture is an AtctTracon with BAK as a child Atct.
 			expect(pinnedAirports(withSession(towerController('IND')), zidTree).airports).toEqual([
+				'BAK',
 				'IND'
 			]);
 		});
 
-		it('returns all child ATCT airports under a TRACON', () => {
-			expect(pinnedAirports(withSession(traconController('S56')), zidTree).airports).toEqual([
-				'EVV',
-				'IND'
+		it('returns just the standalone airport when controlling a pure-tower position', () => {
+			// EVV in the fixture is an AtctTracon with no child Atcts.
+			expect(pinnedAirports(withSession(towerController('EVV')), zidTree).airports).toEqual([
+				'EVV'
 			]);
 		});
 
 		it('unions positions, deduped and sorted', () => {
 			const c = multiPosition(['IND', 'EVV', 'IND']);
-			expect(pinnedAirports(withSession(c), zidTree).airports).toEqual(['EVV', 'IND']);
+			// IND → [BAK, IND]; EVV → [EVV]. Unioned + sorted.
+			expect(pinnedAirports(withSession(c), zidTree).airports).toEqual(['BAK', 'EVV', 'IND']);
 		});
 
 		it('skips positions whose facilityId is not in the tree, warns', () => {
 			const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 			const c = multiPosition(['IND', 'ZZZ']);
-			expect(pinnedAirports(withSession(c), zidTree).airports).toEqual(['IND']);
+			// IND yields [BAK, IND]; ZZZ logs and contributes nothing.
+			expect(pinnedAirports(withSession(c), zidTree).airports).toEqual(['BAK', 'IND']);
 			expect(warn).toHaveBeenCalledTimes(1);
 			expect(warn.mock.calls[0]![0]).toContain('ZZZ');
 		});

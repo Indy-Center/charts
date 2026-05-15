@@ -142,12 +142,14 @@ export async function load({ parent, params, fetch }) {
 		return { pinboard: [] as PinboardEntry[] };
 	}
 
-	// Fetch chart data for every slot EXCEPT the current airport. The current
-	// airport's data comes from the universal +layout.ts and we splice it in
-	// client-side to avoid the duplicate fetch.
-	const fetchTargets = slots.filter((s) => normalize(s.id) !== currentKey);
+	// Fetch chart data for EVERY slot, including the current airport. This
+	// duplicates the universal +layout.ts's fetch for the current airport, but
+	// the benefit is that the current airport's pinboard entry has real chart
+	// data + computed defaultPins (matched SID/STAR, airport diagram). The
+	// alternative — computing defaultPins client-side — would require leaking
+	// route tokens through the data flow.
 	const results = await Promise.allSettled(
-		fetchTargets.map(async ({ id, role }): Promise<PinboardEntry> => {
+		slots.map(async ({ id, role }): Promise<PinboardEntry> => {
 			const apiId = normalizeForApi(id) ?? id;
 			const data = await fetchCharts(apiId, fetch);
 			return {
@@ -155,47 +157,17 @@ export async function load({ parent, params, fetch }) {
 				role,
 				airport: data,
 				defaultPins: defaultPinsFor(role, data, sidToken, starToken),
-				isCurrent: false
+				isCurrent: normalize(id) === currentKey
 			};
 		})
 	);
 
-	const fetchedByKey = new Map<string, PinboardEntry>();
+	const pinboard: PinboardEntry[] = [];
 	for (const r of results) {
 		if (r.status === 'fulfilled') {
-			fetchedByKey.set(normalize(r.value.id), r.value);
+			pinboard.push(r.value);
 		} else {
 			console.warn('[(viewer) pinboard] fetch failed', r.reason);
-		}
-	}
-
-	// Assemble final ordered pinboard. For the current airport slot, leave
-	// `airport` as null — the client will fill it from the universal load's
-	// data so we don't double-fetch.
-	const pinboard: PinboardEntry[] = [];
-	for (const slot of slots) {
-		const key = normalize(slot.id);
-		const isCurrent = key === currentKey;
-		if (isCurrent) {
-			pinboard.push({
-				id: slot.id,
-				role: slot.role,
-				airport: null,
-				defaultPins: [],
-				isCurrent: true
-			});
-		} else {
-			const entry = fetchedByKey.get(key);
-			if (entry) {
-				pinboard.push({
-					id: entry.id,
-					role: entry.role,
-					airport: entry.airport,
-					defaultPins: entry.defaultPins,
-					isCurrent: false
-				});
-			}
-			// If a non-current fetch failed we just drop that slot.
 		}
 	}
 

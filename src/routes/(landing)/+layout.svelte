@@ -37,7 +37,7 @@
 				aviation body. All content contained herein is approved only for use on the VATSIM network.
 			</p>
 			<p class="text-xs leading-tight text-zinc-500">
-				Copyright {new Date().getFullYear()} Indy Center · charts powered by
+				Copyright {new Date().getFullYear()} Steve Crow · charts powered by
 				<a
 					href="https://api-v2.aviationapi.com"
 					target="_blank"

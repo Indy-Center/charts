@@ -10,7 +10,7 @@
 	import ChartMeta from './ChartMeta.svelte';
 	import ViewControls from './ViewControls.svelte';
 	import { displayForm } from '$lib/airport-id';
-	import { PINBOARD_ROLE_LABEL, type PinboardEntry } from '$lib/pinboard';
+	import type { PinboardEntry } from '$lib/pinboard';
 
 	let {
 		airport,
@@ -101,7 +101,7 @@
 						<ChartListCard
 							airportId={display}
 							airportName={entry.airport.airport.airport_name}
-							roleLabel={entry.isCurrent ? undefined : PINBOARD_ROLE_LABEL[entry.role]}
+							role={entry.role}
 							href={entry.isCurrent ? undefined : `/${faaId.toLowerCase()}`}
 							chartsByGroup={entry.airport.chartsByGroup}
 							defaultPins={entry.defaultPins}
