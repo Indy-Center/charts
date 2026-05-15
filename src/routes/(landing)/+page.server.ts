@@ -4,14 +4,15 @@ import type { AirportInfo, Chart, ChartGroup, ChartsByGroup } from '$lib/types';
 
 export type FlightChartRole = 'departure' | 'arrival' | 'alternate';
 
-export type FlightChartMoreGroup = { group: ChartGroup; charts: Chart[] };
-
 export type FlightChartSection = {
 	role: FlightChartRole;
 	filedId: string;
 	airport: AirportInfo;
+	// The full role-filtered chart set for this airport. ChartListCard renders
+	// `primary` first then computes the remainder of this set as "more".
+	chartsByGroup: ChartsByGroup;
+	// Curated subset shown at the top of the card before the "Show more" toggle.
 	primary: Chart[];
-	more: FlightChartMoreGroup[];
 };
 
 const DIGIT_TO_WORD = [
@@ -70,17 +71,25 @@ function parseRouteEndpoints(route: string | undefined): {
 	return { first: tokens[0]!, last: tokens[tokens.length - 1]! };
 }
 
-function collectMore(
-	byGroup: ChartsByGroup,
-	included: Set<string>,
-	groups: ChartGroup[]
-): FlightChartMoreGroup[] {
-	const out: FlightChartMoreGroup[] = [];
-	for (const group of groups) {
-		const remaining = byGroup[group].filter((c) => !included.has(c.pdf_url));
-		if (remaining.length > 0) {
-			out.push({ group, charts: remaining });
-		}
+// Chart groups that are relevant for a pilot at each leg of the flight.
+// Departure: airport diagram + DPs/SIDs and any general airport info.
+// Arrival: airport diagram + STARs + approach plates + general.
+// Alternate: airport diagram + approach plates (briefer backup).
+const ROLE_GROUPS: Record<FlightChartRole, ChartGroup[]> = {
+	departure: ['airport_diagram', 'general', 'departure'],
+	arrival: ['airport_diagram', 'general', 'arrival', 'approach'],
+	alternate: ['airport_diagram', 'approach']
+};
+
+function emptyByGroup(): ChartsByGroup {
+	return { airport_diagram: [], general: [], approach: [], departure: [], arrival: [] };
+}
+
+function filterByRole(byGroup: ChartsByGroup, role: FlightChartRole): ChartsByGroup {
+	const allowed = new Set<ChartGroup>(ROLE_GROUPS[role]);
+	const out = emptyByGroup();
+	for (const group of allowed) {
+		out[group] = byGroup[group];
 	}
 	return out;
 }
@@ -93,33 +102,18 @@ function buildSection(
 	matchedSid: Chart | null,
 	matchedStar: Chart | null
 ): FlightChartSection {
-	const diagram = byGroup.airport_diagram;
+	const roleFiltered = filterByRole(byGroup, role);
+	const diagram = roleFiltered.airport_diagram;
+	let primary: Chart[];
 	if (role === 'departure') {
-		const primary = [...diagram, ...(matchedSid ? [matchedSid] : [])];
-		const included = new Set(primary.map((c) => c.pdf_url));
-		return {
-			role,
-			filedId,
-			airport,
-			primary,
-			more: collectMore(byGroup, included, ['general', 'departure'])
-		};
+		primary = [...diagram, ...(matchedSid ? [matchedSid] : [])];
+	} else if (role === 'arrival') {
+		primary = [...diagram, ...(matchedStar ? [matchedStar] : []), ...roleFiltered.approach];
+	} else {
+		// alternate: airport diagram + all approaches.
+		primary = [...diagram, ...roleFiltered.approach];
 	}
-	if (role === 'arrival') {
-		const primary = [...diagram, ...(matchedStar ? [matchedStar] : []), ...byGroup.approach];
-		const included = new Set(primary.map((c) => c.pdf_url));
-		return {
-			role,
-			filedId,
-			airport,
-			primary,
-			more: collectMore(byGroup, included, ['general', 'arrival'])
-		};
-	}
-	// alternate: airport diagram + all approaches; no 'more' since the role
-	// filter is already this tight.
-	const primary = [...diagram, ...byGroup.approach];
-	return { role, filedId, airport, primary, more: [] };
+	return { role, filedId, airport, chartsByGroup: roleFiltered, primary };
 }
 
 export async function load({ parent, fetch }) {
