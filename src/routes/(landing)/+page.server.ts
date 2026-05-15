@@ -2,17 +2,18 @@ import { fetchCharts } from '$lib/server/aviationapi';
 import { normalizeForApi } from '$lib/airport-id';
 import type { AirportInfo, Chart, ChartGroup, ChartsByGroup } from '$lib/types';
 
-export type FlightChartRole = 'departure' | 'arrival' | 'alternate';
+export type ChartBoardRole = 'departure' | 'arrival' | 'alternate' | 'controlling';
 
-export type FlightChartSection = {
-	role: FlightChartRole;
+export type ChartBoardSection = {
+	role: ChartBoardRole;
 	filedId: string;
 	airport: AirportInfo;
 	// The full role-filtered chart set for this airport. ChartListCard shows
 	// this as the expanded list (with per-row pin toggles).
 	chartsByGroup: ChartsByGroup;
-	// Server-curated high-confidence pins (e.g., airport diagram + matched
-	// SID/STAR). Rendered as chips when the card is collapsed.
+	// Server-curated high-confidence pins (airport diagram + matched SID/STAR
+	// for flying roles, airport diagram only for controlling). Rendered as
+	// chips when the card is collapsed.
 	defaultPins: Chart[];
 };
 
@@ -29,10 +30,8 @@ const DIGIT_TO_WORD = [
 	'NINE'
 ] as const;
 
-// Procedure tokens in a route string look like `SPILR1` (SID) or `JAKTZ2`
-// (STAR). FAA chart names spell the revision number out: `SPILR ONE (RNAV)`,
-// `JAKTZ TWO (RNAV)`. Convert the digit to the word form and match charts
-// whose name begins with `<prefix> <word>`.
+// Match a procedure token like `SPILR1` (SID) or `JAKTZ2` (STAR) to a chart
+// name like `SPILR ONE (RNAV)`. Converts the trailing digit to its word form.
 function matchProcedureChart(charts: Chart[], routeToken: string): Chart | null {
 	const m = routeToken.match(/^([A-Z]+?)(\d+)?$/);
 	if (!m) {
@@ -48,7 +47,6 @@ function matchProcedureChart(charts: Chart[], routeToken: string): Chart | null 
 			return exact;
 		}
 	}
-	// Fallback: any chart whose name starts with the alpha prefix.
 	return charts.find((c) => c.chart_name.toUpperCase().startsWith(`${prefix} `)) ?? null;
 }
 
@@ -72,21 +70,21 @@ function parseRouteEndpoints(route: string | undefined): {
 	return { first: tokens[0]!, last: tokens[tokens.length - 1]! };
 }
 
-// Chart groups that are relevant for a pilot at each leg of the flight.
-// Departure: airport diagram + DPs/SIDs and any general airport info.
-// Arrival: airport diagram + STARs + approach plates + general.
-// Alternate: airport diagram + approach plates (briefer backup).
-const ROLE_GROUPS: Record<FlightChartRole, ChartGroup[]> = {
+// Chart groups that are relevant per role. Controllers get the full role-
+// agnostic view (everything except STARs and SIDs which they reference rarely
+// for vector work — but actually they use them too, so we leave it broad).
+const ROLE_GROUPS: Record<ChartBoardRole, ChartGroup[]> = {
 	departure: ['airport_diagram', 'general', 'departure'],
 	arrival: ['airport_diagram', 'general', 'arrival', 'approach'],
-	alternate: ['airport_diagram', 'approach']
+	alternate: ['airport_diagram', 'approach'],
+	controlling: ['airport_diagram', 'general', 'approach', 'departure', 'arrival']
 };
 
 function emptyByGroup(): ChartsByGroup {
 	return { airport_diagram: [], general: [], approach: [], departure: [], arrival: [] };
 }
 
-function filterByRole(byGroup: ChartsByGroup, role: FlightChartRole): ChartsByGroup {
+function filterByRole(byGroup: ChartsByGroup, role: ChartBoardRole): ChartsByGroup {
 	const allowed = new Set<ChartGroup>(ROLE_GROUPS[role]);
 	const out = emptyByGroup();
 	for (const group of allowed) {
@@ -96,48 +94,55 @@ function filterByRole(byGroup: ChartsByGroup, role: FlightChartRole): ChartsByGr
 }
 
 function buildSection(
-	role: FlightChartRole,
+	role: ChartBoardRole,
 	filedId: string,
 	airport: AirportInfo,
 	byGroup: ChartsByGroup,
 	matchedSid: Chart | null,
 	matchedStar: Chart | null
-): FlightChartSection {
+): ChartBoardSection {
 	const roleFiltered = filterByRole(byGroup, role);
 	const diagram = roleFiltered.airport_diagram;
-	// High-confidence defaults: airport diagram is always relevant, plus the
-	// matched SID for departures or matched STAR for arrivals. Approaches stay
-	// unpinned by default — the user picks once they know the active runway.
 	let defaultPins: Chart[];
 	if (role === 'departure') {
 		defaultPins = [...diagram, ...(matchedSid ? [matchedSid] : [])];
 	} else if (role === 'arrival') {
 		defaultPins = [...diagram, ...(matchedStar ? [matchedStar] : [])];
 	} else {
+		// Alternate or controlling: high-confidence default is the airport diagram only.
 		defaultPins = [...diagram];
 	}
 	return { role, filedId, airport, chartsByGroup: roleFiltered, defaultPins };
 }
 
 export async function load({ parent, fetch }) {
-	const { session } = await parent();
+	const { session, pinnedAirports } = await parent();
+
 	const fp = session?.activeFlightPlan;
-	if (!fp) {
-		return { flightCharts: null };
-	}
+	const controlling = pinnedAirports.mode === 'controlling' && pinnedAirports.airports.length > 0;
 
-	const targets: { role: FlightChartRole; id: string }[] = [
-		{ role: 'departure', id: fp.departure },
-		{ role: 'arrival', id: fp.arrival }
-	];
-	if (fp.alternate && fp.alternate.trim()) {
-		targets.push({ role: 'alternate', id: fp.alternate.trim() });
-	}
+	// Decide which airports to load. Flying mode wins if both are somehow active.
+	let targets: { role: ChartBoardRole; id: string }[];
+	let sidToken: string | null = null;
+	let starToken: string | null = null;
 
-	const { first: sidToken, last: starToken } = parseRouteEndpoints(fp.route);
+	if (fp) {
+		targets = [
+			{ role: 'departure', id: fp.departure },
+			{ role: 'arrival', id: fp.arrival }
+		];
+		if (fp.alternate && fp.alternate.trim()) {
+			targets.push({ role: 'alternate', id: fp.alternate.trim() });
+		}
+		({ first: sidToken, last: starToken } = parseRouteEndpoints(fp.route));
+	} else if (controlling) {
+		targets = pinnedAirports.airports.map((id) => ({ role: 'controlling' as const, id }));
+	} else {
+		return { chartBoard: null };
+	}
 
 	const results = await Promise.allSettled(
-		targets.map(async ({ role, id }): Promise<FlightChartSection> => {
+		targets.map(async ({ role, id }): Promise<ChartBoardSection> => {
 			const apiId = normalizeForApi(id) ?? id;
 			const data = await fetchCharts(apiId, fetch);
 			const matchedSid =
@@ -152,15 +157,15 @@ export async function load({ parent, fetch }) {
 		})
 	);
 
-	const flightCharts = results
-		.filter((r): r is PromiseFulfilledResult<FlightChartSection> => r.status === 'fulfilled')
+	const chartBoard = results
+		.filter((r): r is PromiseFulfilledResult<ChartBoardSection> => r.status === 'fulfilled')
 		.map((r) => r.value);
 
 	for (const r of results) {
 		if (r.status === 'rejected') {
-			console.warn('[(landing)/+page.server] flight-chart fetch failed', r.reason);
+			console.warn('[(landing)/+page.server] chart-board fetch failed', r.reason);
 		}
 	}
 
-	return { flightCharts: flightCharts.length > 0 ? flightCharts : null };
+	return { chartBoard: chartBoard.length > 0 ? chartBoard : null };
 }

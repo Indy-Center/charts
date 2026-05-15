@@ -14,6 +14,10 @@
 
 	const mode = $derived(data.pinnedAirports.mode);
 
+	const boardHeading = $derived(
+		mode === 'flying' ? 'Your flight' : mode === 'controlling' ? 'Controlling' : ''
+	);
+
 	function pickAirport(faaId: string) {
 		goto(`/${faaId.toLowerCase()}`);
 	}
@@ -21,107 +25,20 @@
 	function pickChart(faaId: string, chart: Chart) {
 		goto(`/${faaId.toLowerCase()}/${chartToSlug(chart.chart_name)}`);
 	}
-
-	function formatAltitude(alt: string | undefined): string {
-		if (!alt) {
-			return '';
-		}
-		const num = parseInt(alt, 10);
-		if (isNaN(num)) {
-			return alt;
-		}
-		if (num >= 18000) {
-			return `FL${Math.round(num / 100)}`;
-		}
-		return `${num.toLocaleString()} ft`;
-	}
-
-	function formatDeptime(t: string | undefined): string {
-		if (!t || t.length !== 4) {
-			return '';
-		}
-		return `${t}z`;
-	}
-
-	function formatEnroute(t: string | undefined): string {
-		if (!t || t.length !== 4) {
-			return '';
-		}
-		return `${t.slice(0, 2)}:${t.slice(2)}`;
-	}
-
-	const flightPlan = $derived(data.session?.activeFlightPlan ?? null);
-
-	const fpMeta = $derived.by(() => {
-		if (!flightPlan) {
-			return [];
-		}
-		const parts: string[] = [];
-		if (flightPlan.aircraft_short || flightPlan.aircraft_faa || flightPlan.aircraft) {
-			parts.push(flightPlan.aircraft_short ?? flightPlan.aircraft_faa ?? flightPlan.aircraft ?? '');
-		}
-		const alt = formatAltitude(flightPlan.altitude);
-		if (alt) {
-			parts.push(alt);
-		}
-		const dep = formatDeptime(flightPlan.deptime);
-		if (dep) {
-			parts.push(dep);
-		}
-		const enr = formatEnroute(flightPlan.enroute_time);
-		if (enr) {
-			parts.push(`${enr} enroute`);
-		}
-		return parts;
-	});
 </script>
 
-{#if mode === 'flying' && data.flightCharts}
-	<!-- FLYING: search lives in the header. Body is the curated flight board. -->
+{#if data.chartBoard}
+	<!-- Flying OR controlling: same chart-board layout, just a different heading. Search lives in the header. -->
 	<div class="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
-		<h2 class="mb-6 text-center text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase">
-			Your flight
-		</h2>
-
-		{#if flightPlan}
-			<section
-				aria-label="Filed flight plan"
-				class="mb-6 rounded-lg border border-zinc-800/60 bg-zinc-900/85 px-4 py-3 shadow-lg backdrop-blur-md sm:px-5"
+		{#if boardHeading}
+			<h2
+				class="mb-6 text-center text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase"
 			>
-				<div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-					<div
-						class="flex items-baseline gap-2 font-mono text-base font-semibold tracking-wider text-zinc-100"
-					>
-						<span>{flightPlan.departure}</span>
-						<span class="text-zinc-600">→</span>
-						<span>{flightPlan.arrival}</span>
-						{#if flightPlan.alternate && flightPlan.alternate.trim()}
-							<span class="text-xs font-normal tracking-normal text-zinc-500">
-								alt {flightPlan.alternate}
-							</span>
-						{/if}
-					</div>
-					{#if fpMeta.length > 0}
-						<div class="flex flex-wrap items-baseline gap-x-2 text-xs text-zinc-400">
-							{#each fpMeta as part, i (i)}
-								{#if i > 0}
-									<span class="text-zinc-700">·</span>
-								{/if}
-								<span>{part}</span>
-							{/each}
-						</div>
-					{/if}
-				</div>
-				{#if flightPlan.route}
-					<p class="mt-2 font-mono text-xs leading-relaxed break-words text-zinc-400">
-						{flightPlan.route}
-					</p>
-				{/if}
-			</section>
+				{boardHeading}
+			</h2>
 		{/if}
-
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each data.flightCharts as section (section.role)}
+			{#each data.chartBoard as section (`${section.role}:${section.filedId}`)}
 				{@const faaId = section.airport.faa_ident}
 				{@const display = displayForm(faaId, section.airport.icao_ident) || section.filedId}
 				<ChartListCard
@@ -135,26 +52,6 @@
 				/>
 			{/each}
 		</div>
-	</div>
-{:else if mode === 'controlling' && data.pinnedAirports.airports.length > 0}
-	<!-- CONTROLLING: search lives in the header. Body shows pinned airports. -->
-	<div class="mx-auto w-full max-w-3xl px-4 py-8 sm:py-10">
-		<h2 class="mb-4 text-center text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase">
-			Controlling
-		</h2>
-		<nav
-			aria-label="Airports under your active position"
-			class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6"
-		>
-			{#each data.pinnedAirports.airports as id (id)}
-				<a
-					href={`/${id.toLowerCase()}`}
-					class="flex cursor-pointer items-center justify-center rounded-md border border-sky-700/40 bg-sky-900/20 py-3 font-mono text-sm font-medium tracking-wider text-sky-200 transition-colors hover:border-sky-500/60 hover:bg-sky-900/30 hover:text-sky-100"
-				>
-					{id}
-				</a>
-			{/each}
-		</nav>
 	</div>
 {:else}
 	<!-- DEFAULT: centered hero. Logo + tagline + big search. Common airports as soft secondary affordance. -->

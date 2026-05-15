@@ -77,7 +77,9 @@
 		{/if}
 
 		<div class="min-w-0 flex-1">
-			<AirportSearch onSelectAirport={pickAirport} onSelectChart={pickChart} />
+			<div class="mx-auto max-w-2xl">
+				<AirportSearch onSelectAirport={pickAirport} onSelectChart={pickChart} />
+			</div>
 		</div>
 
 		{#if actions}
