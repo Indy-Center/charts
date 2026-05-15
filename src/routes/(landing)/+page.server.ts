@@ -1,44 +1,125 @@
 import { fetchCharts } from '$lib/server/aviationapi';
 import { normalizeForApi } from '$lib/airport-id';
-import type { AirportInfo, ChartGroup, ChartsByGroup } from '$lib/types';
+import type { AirportInfo, Chart, ChartGroup, ChartsByGroup } from '$lib/types';
 
 export type FlightChartRole = 'departure' | 'arrival' | 'alternate';
 
-// Chart groups that are relevant for a pilot at each leg of the flight.
-// Departure: airport diagram + DPs/SIDs and any general airport info.
-// Arrival: airport diagram + STARs + approach plates (the pilot may end up
-// flying any of them depending on weather/ATC) + general.
-// Alternate: airport diagram + approach plates only — backup, briefer set.
-const ROLE_GROUPS: Record<FlightChartRole, ChartGroup[]> = {
-	departure: ['airport_diagram', 'general', 'departure'],
-	arrival: ['airport_diagram', 'general', 'arrival', 'approach'],
-	alternate: ['airport_diagram', 'approach']
-};
+export type FlightChartMoreGroup = { group: ChartGroup; charts: Chart[] };
 
 export type FlightChartSection = {
 	role: FlightChartRole;
 	filedId: string;
 	airport: AirportInfo;
-	chartsByGroup: ChartsByGroup;
+	primary: Chart[];
+	more: FlightChartMoreGroup[];
 };
 
-function emptyByGroup(): ChartsByGroup {
-	return {
-		airport_diagram: [],
-		general: [],
-		approach: [],
-		departure: [],
-		arrival: []
-	};
+const DIGIT_TO_WORD = [
+	'ZERO',
+	'ONE',
+	'TWO',
+	'THREE',
+	'FOUR',
+	'FIVE',
+	'SIX',
+	'SEVEN',
+	'EIGHT',
+	'NINE'
+] as const;
+
+// Procedure tokens in a route string look like `SPILR1` (SID) or `JAKTZ2`
+// (STAR). FAA chart names spell the revision number out: `SPILR ONE (RNAV)`,
+// `JAKTZ TWO (RNAV)`. Convert the digit to the word form and match charts
+// whose name begins with `<prefix> <word>`.
+function matchProcedureChart(charts: Chart[], routeToken: string): Chart | null {
+	const m = routeToken.match(/^([A-Z]+?)(\d+)?$/);
+	if (!m) {
+		return null;
+	}
+	const prefix = m[1]!;
+	const digitStr = m[2];
+	if (digitStr && digitStr.length === 1) {
+		const word = DIGIT_TO_WORD[Number(digitStr)];
+		const target = `${prefix} ${word}`;
+		const exact = charts.find((c) => c.chart_name.toUpperCase().startsWith(target));
+		if (exact) {
+			return exact;
+		}
+	}
+	// Fallback: any chart whose name starts with the alpha prefix.
+	return charts.find((c) => c.chart_name.toUpperCase().startsWith(`${prefix} `)) ?? null;
 }
 
-function filterByRole(byGroup: ChartsByGroup, role: FlightChartRole): ChartsByGroup {
-	const allowed = new Set<ChartGroup>(ROLE_GROUPS[role]);
-	const out = emptyByGroup();
-	for (const group of allowed) {
-		out[group] = byGroup[group];
+function parseRouteEndpoints(route: string | undefined): {
+	first: string | null;
+	last: string | null;
+} {
+	if (!route) {
+		return { first: null, last: null };
+	}
+	const tokens = route
+		.trim()
+		.split(/\s+/)
+		.filter((t) => t.length > 0);
+	if (tokens.length === 0) {
+		return { first: null, last: null };
+	}
+	if (tokens.length === 1) {
+		return { first: tokens[0]!, last: null };
+	}
+	return { first: tokens[0]!, last: tokens[tokens.length - 1]! };
+}
+
+function collectMore(
+	byGroup: ChartsByGroup,
+	included: Set<string>,
+	groups: ChartGroup[]
+): FlightChartMoreGroup[] {
+	const out: FlightChartMoreGroup[] = [];
+	for (const group of groups) {
+		const remaining = byGroup[group].filter((c) => !included.has(c.pdf_url));
+		if (remaining.length > 0) {
+			out.push({ group, charts: remaining });
+		}
 	}
 	return out;
+}
+
+function buildSection(
+	role: FlightChartRole,
+	filedId: string,
+	airport: AirportInfo,
+	byGroup: ChartsByGroup,
+	matchedSid: Chart | null,
+	matchedStar: Chart | null
+): FlightChartSection {
+	const diagram = byGroup.airport_diagram;
+	if (role === 'departure') {
+		const primary = [...diagram, ...(matchedSid ? [matchedSid] : [])];
+		const included = new Set(primary.map((c) => c.pdf_url));
+		return {
+			role,
+			filedId,
+			airport,
+			primary,
+			more: collectMore(byGroup, included, ['general', 'departure'])
+		};
+	}
+	if (role === 'arrival') {
+		const primary = [...diagram, ...(matchedStar ? [matchedStar] : []), ...byGroup.approach];
+		const included = new Set(primary.map((c) => c.pdf_url));
+		return {
+			role,
+			filedId,
+			airport,
+			primary,
+			more: collectMore(byGroup, included, ['general', 'arrival'])
+		};
+	}
+	// alternate: airport diagram + all approaches; no 'more' since the role
+	// filter is already this tight.
+	const primary = [...diagram, ...byGroup.approach];
+	return { role, filedId, airport, primary, more: [] };
 }
 
 export async function load({ parent, fetch }) {
@@ -56,16 +137,21 @@ export async function load({ parent, fetch }) {
 		targets.push({ role: 'alternate', id: fp.alternate.trim() });
 	}
 
+	const { first: sidToken, last: starToken } = parseRouteEndpoints(fp.route);
+
 	const results = await Promise.allSettled(
 		targets.map(async ({ role, id }): Promise<FlightChartSection> => {
 			const apiId = normalizeForApi(id) ?? id;
 			const data = await fetchCharts(apiId, fetch);
-			return {
-				role,
-				filedId: id,
-				airport: data.airport,
-				chartsByGroup: filterByRole(data.chartsByGroup, role)
-			};
+			const matchedSid =
+				role === 'departure' && sidToken
+					? matchProcedureChart(data.chartsByGroup.departure, sidToken)
+					: null;
+			const matchedStar =
+				role === 'arrival' && starToken
+					? matchProcedureChart(data.chartsByGroup.arrival, starToken)
+					: null;
+			return buildSection(role, id, data.airport, data.chartsByGroup, matchedSid, matchedStar);
 		})
 	);
 
