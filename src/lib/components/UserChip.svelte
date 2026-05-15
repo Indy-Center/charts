@@ -1,8 +1,6 @@
 <!-- src/lib/components/UserChip.svelte -->
 <script lang="ts">
 	import type { User } from '@indy-center/identity';
-	import IconLogout from '~icons/mdi/logout';
-	import IconLogin from '~icons/mdi/login';
 
 	let {
 		user,
@@ -41,6 +39,39 @@
 		}
 		return (user.email?.[0] ?? '?').toUpperCase();
 	});
+
+	// Compute the Gravatar URL on the client when an email is available. Uses
+	// SHA-256 (Gravatar's current standard) via the Web Crypto API; falls back
+	// to the initials avatar when the email is missing, the hash hasn't
+	// resolved yet, or Gravatar returns 404 (configured via `d=404`).
+	let gravatarUrl = $state<string | null>(null);
+	let gravatarErrored = $state(false);
+
+	$effect(() => {
+		const email = user?.email;
+		if (!email || typeof window === 'undefined') {
+			gravatarUrl = null;
+			gravatarErrored = false;
+			return;
+		}
+		let cancelled = false;
+		(async () => {
+			const normalized = email.trim().toLowerCase();
+			const buf = new TextEncoder().encode(normalized);
+			const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+			const hex = Array.from(new Uint8Array(hashBuf))
+				.map((b) => b.toString(16).padStart(2, '0'))
+				.join('');
+			if (cancelled) {
+				return;
+			}
+			gravatarUrl = `https://gravatar.com/avatar/${hex}?s=64&d=404`;
+			gravatarErrored = false;
+		})();
+		return () => {
+			cancelled = true;
+		};
+	});
 </script>
 
 {#if user}
@@ -48,24 +79,28 @@
 		href={logoutHref}
 		aria-label={`Sign out (${displayName})`}
 		title="Sign out"
-		class="group flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-zinc-700/40 bg-zinc-800/40 py-1 pr-3 pl-1 text-sm text-zinc-300 backdrop-blur transition-all hover:border-zinc-600 hover:bg-zinc-800 hover:text-zinc-100 active:scale-95"
+		class="group flex shrink-0 cursor-pointer items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm text-zinc-300 transition-colors hover:bg-zinc-800/60 hover:text-zinc-100"
 	>
 		<span
-			class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500/40 to-sky-700/30 text-[11px] font-semibold tracking-wide text-sky-100 ring-1 ring-sky-500/30 ring-inset"
+			class="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500/40 to-sky-700/30 text-[11px] font-semibold tracking-wide text-sky-100 ring-1 ring-sky-500/30 ring-inset"
 		>
-			{initials}
+			<span>{initials}</span>
+			{#if gravatarUrl && !gravatarErrored}
+				<img
+					src={gravatarUrl}
+					alt=""
+					onerror={() => (gravatarErrored = true)}
+					class="absolute inset-0 h-full w-full rounded-full object-cover"
+				/>
+			{/if}
 		</span>
 		<span class="hidden max-w-[10rem] truncate text-xs font-medium sm:inline">{displayName}</span>
-		<IconLogout
-			class="hidden text-base text-zinc-500 transition-colors group-hover:text-zinc-200 sm:inline"
-		/>
 	</a>
 {:else}
 	<a
 		href={loginHref}
-		class="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-zinc-700/40 bg-zinc-800/40 px-3 py-1.5 text-sm text-zinc-300 backdrop-blur transition-all hover:border-sky-600/50 hover:bg-zinc-800 hover:text-sky-300 active:scale-95"
+		class="flex shrink-0 cursor-pointer items-center rounded-full bg-sky-500/15 px-4 py-1.5 text-sm font-medium text-sky-200 transition-colors hover:bg-sky-500/25 hover:text-sky-100"
 	>
-		<IconLogin class="text-base" />
-		<span class="hidden sm:inline">Sign in</span>
+		Connect with VATSIM
 	</a>
 {/if}

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import ChartListCard from '$lib/components/ChartListCard.svelte';
 import type { Chart, ChartsByGroup } from '$lib/types';
-import { __resetPinsForTests, isUserPinned } from '$lib/chart-pins';
+import { __resetPinsForTests, isUserPinned } from '$lib/chart-pins.svelte';
 
 const mk = (n: string): Chart => ({
 	chart_name: n,

@@ -49,43 +49,49 @@
 	}
 </script>
 
-<div class="sticky top-0 z-10 w-full border-b border-zinc-800/50 bg-zinc-900/80 backdrop-blur-lg">
-	<div class="flex w-full items-center gap-3 px-4 py-3 sm:px-6 sm:py-3.5">
+<div class="sticky top-0 z-10 w-full bg-zinc-950/85 backdrop-blur-md">
+	<!-- No border, no max-width cap, tight side padding (px-3) so the logo
+	     aligns with the left edge of the pinboard cards on the chart viewer.
+	     Search sits snug next to the logo; right block uses ml-auto to push
+	     itself to the page's right edge. Reads as floating widgets, not a
+	     banded header strip. -->
+	<div class="flex w-full items-center gap-2 px-3 py-2.5 sm:gap-3">
 		<a
 			href="/"
 			aria-label="Indy Center home"
 			class="flex shrink-0 cursor-pointer items-center transition-opacity hover:opacity-80"
 		>
-			<img src="/indy-mark.svg" alt="Indy Center" class="h-8 w-auto invert" />
+			<img src="/indy-mark.svg" alt="Indy Center" class="h-7 w-auto invert" />
 		</a>
 
-		{#if statusPill}
-			<a
-				href="/"
-				aria-label={statusPill.kind === 'flying'
-					? 'Active flight plan'
-					: 'Active controlling session'}
-				class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-sky-700/40 bg-sky-900/20 px-2.5 py-1.5 text-xs font-medium tracking-wide text-sky-200 transition-colors hover:border-sky-500/60 hover:bg-sky-900/30 hover:text-sky-100"
-			>
-				{#if statusPill.kind === 'flying'}
-					<IconTakeoff class="text-sm" />
-				{:else}
-					<IconTower class="text-sm" />
-				{/if}
-				<span class="font-mono">{statusPill.text}</span>
-			</a>
-		{/if}
-
-		<div class="min-w-0 flex-1">
-			<div class="mx-auto max-w-2xl">
-				<AirportSearch onSelectAirport={pickAirport} onSelectChart={pickChart} />
-			</div>
+		<div class="min-w-0 max-w-xl flex-1">
+			<AirportSearch onSelectAirport={pickAirport} onSelectChart={pickChart} />
 		</div>
 
-		{#if actions}
-			{@render actions()}
-		{/if}
+		<div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+			{#if actions}
+				{@render actions()}
+			{/if}
 
-		<UserChip {user} {currentPath} {identityUrl} />
+			{#if statusPill}
+				<a
+					href="/dashboard"
+					aria-label={statusPill.kind === 'flying'
+						? 'Active flight plan'
+						: 'Active controlling session'}
+					title={statusPill.kind === 'flying' ? 'Active flight plan' : 'Active controlling session'}
+					class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-800/60 hover:text-zinc-100"
+				>
+					{#if statusPill.kind === 'flying'}
+						<IconTakeoff class="text-sm text-sky-400" />
+					{:else}
+						<IconTower class="text-sm text-sky-400" />
+					{/if}
+					<span class="hidden font-mono tracking-wide sm:inline">{statusPill.text}</span>
+				</a>
+			{/if}
+
+			<UserChip {user} {currentPath} {identityUrl} />
+		</div>
 	</div>
 </div>

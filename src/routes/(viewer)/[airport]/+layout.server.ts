@@ -90,10 +90,11 @@ export async function load({ parent, params, fetch }) {
 	const session = parentData.session;
 	const currentKey = normalize(params.airport);
 
-	// Build the canonical ordered list of pinboard slots. Order is fixed by mode
-	// (dep / arr / alt for flying, alphabetical for controlling, current first
-	// for off-context). This makes card positions stable as the user navigates
-	// between airports in the same session.
+	// Build the canonical ordered list of pinboard slots — plan/controlling
+	// only. Anything else (the current airport when off-context, user-pinned
+	// follower airports) gets rendered client-side in a single alphabetised
+	// follower row so card positions don't reshuffle as the user navigates or
+	// pins/unpins.
 	type Slot = { id: string; role: PinboardRole };
 	const slots: Slot[] = [];
 	const seen = new Set<string>();
@@ -129,13 +130,6 @@ export async function load({ parent, params, fetch }) {
 		for (const id of sorted) {
 			add(id, 'controlling');
 		}
-	}
-
-	// If the current airport isn't already in the canonical list (off-context),
-	// prepend it so it always appears in the pinboard.
-	if (!seen.has(currentKey)) {
-		slots.unshift({ id: params.airport, role: 'controlling' });
-		seen.add(currentKey);
 	}
 
 	if (slots.length === 0) {

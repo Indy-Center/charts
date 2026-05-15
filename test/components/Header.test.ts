@@ -15,9 +15,9 @@ describe('Header', () => {
 		expect(screen.getByRole('combobox')).toBeInTheDocument();
 	});
 
-	it('renders a Sign in link when user is null', () => {
+	it('renders a Connect with VATSIM link when user is null', () => {
 		render(Header, { user: null, currentPath: '/' });
-		expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: /connect with vatsim/i })).toBeInTheDocument();
 	});
 
 	it('renders the user name when authenticated', () => {

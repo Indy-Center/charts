@@ -1,3 +1,4 @@
+import { redirect } from '@sveltejs/kit';
 import { fetchCharts } from '$lib/server/aviationapi';
 import { normalizeForApi } from '$lib/airport-id';
 import type { AirportInfo, Chart, ChartGroup, ChartsByGroup } from '$lib/types';
@@ -8,12 +9,7 @@ export type ChartBoardSection = {
 	role: ChartBoardRole;
 	filedId: string;
 	airport: AirportInfo;
-	// The full role-filtered chart set for this airport. ChartListCard shows
-	// this as the expanded list (with per-row pin toggles).
 	chartsByGroup: ChartsByGroup;
-	// Server-curated high-confidence pins (airport diagram + matched SID/STAR
-	// for flying roles, airport diagram only for controlling). Rendered as
-	// chips when the card is collapsed.
 	defaultPins: Chart[];
 };
 
@@ -30,8 +26,6 @@ const DIGIT_TO_WORD = [
 	'NINE'
 ] as const;
 
-// Match a procedure token like `SPILR1` (SID) or `JAKTZ2` (STAR) to a chart
-// name like `SPILR ONE (RNAV)`. Converts the trailing digit to its word form.
 function matchProcedureChart(charts: Chart[], routeToken: string): Chart | null {
 	const m = routeToken.match(/^([A-Z]+?)(\d+)?$/);
 	if (!m) {
@@ -70,9 +64,6 @@ function parseRouteEndpoints(route: string | undefined): {
 	return { first: tokens[0]!, last: tokens[tokens.length - 1]! };
 }
 
-// Chart groups that are relevant per role. Controllers get the full role-
-// agnostic view (everything except STARs and SIDs which they reference rarely
-// for vector work — but actually they use them too, so we leave it broad).
 const ROLE_GROUPS: Record<ChartBoardRole, ChartGroup[]> = {
 	departure: ['airport_diagram', 'general', 'departure'],
 	arrival: ['airport_diagram', 'general', 'arrival', 'approach'],
@@ -109,7 +100,6 @@ function buildSection(
 	} else if (role === 'arrival') {
 		defaultPins = [...diagram, ...(matchedStar ? [matchedStar] : [])];
 	} else {
-		// Alternate or controlling: high-confidence default is the airport diagram only.
 		defaultPins = [...diagram];
 	}
 	return { role, filedId, airport, chartsByGroup: roleFiltered, defaultPins };
@@ -121,7 +111,6 @@ export async function load({ parent, fetch }) {
 	const fp = session?.activeFlightPlan;
 	const controlling = pinnedAirports.mode === 'controlling' && pinnedAirports.airports.length > 0;
 
-	// Decide which airports to load. Flying mode wins if both are somehow active.
 	let targets: { role: ChartBoardRole; id: string }[];
 	let sidToken: string | null = null;
 	let starToken: string | null = null;
@@ -138,7 +127,9 @@ export async function load({ parent, fetch }) {
 	} else if (controlling) {
 		targets = pinnedAirports.airports.map((id) => ({ role: 'controlling' as const, id }));
 	} else {
-		return { chartBoard: null };
+		// No flight plan and not controlling — there's nothing to put on the
+		// dashboard, so bounce back to the hero.
+		throw redirect(302, '/');
 	}
 
 	const results = await Promise.allSettled(
@@ -163,9 +154,13 @@ export async function load({ parent, fetch }) {
 
 	for (const r of results) {
 		if (r.status === 'rejected') {
-			console.warn('[(landing)/+page.server] chart-board fetch failed', r.reason);
+			console.warn('[(landing)/dashboard/+page.server] chart-board fetch failed', r.reason);
 		}
 	}
 
-	return { chartBoard: chartBoard.length > 0 ? chartBoard : null };
+	if (chartBoard.length === 0) {
+		throw redirect(302, '/');
+	}
+
+	return { chartBoard };
 }

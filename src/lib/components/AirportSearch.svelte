@@ -51,8 +51,8 @@
 
 	const inputClass = $derived(
 		size === 'lg'
-			? 'w-full rounded-xl border border-zinc-700/50 bg-zinc-800/60 py-4 pr-16 pl-14 text-base tracking-wide text-zinc-100 uppercase shadow-lg transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-600/50 focus:bg-zinc-800/80 focus:outline-none'
-			: 'w-full rounded-md border border-zinc-700/50 bg-zinc-800/50 py-1.5 pr-12 pl-8 text-sm text-zinc-100 uppercase transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-600/50 focus:bg-zinc-800 focus:outline-none'
+			? 'w-full rounded-xl bg-zinc-800/60 py-4 pr-16 pl-14 text-base tracking-wide text-zinc-100 uppercase transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:bg-zinc-800/80 focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/30'
+			: 'w-full rounded-md bg-zinc-800/50 py-1.5 pr-12 pl-8 text-sm text-zinc-100 uppercase transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:bg-zinc-800 focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/30'
 	);
 
 	const iconClass = $derived(size === 'lg' ? 'text-2xl' : 'text-sm');

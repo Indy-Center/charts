@@ -4,13 +4,13 @@ import { render, screen } from '@testing-library/svelte';
 import UserChip from '$lib/components/UserChip.svelte';
 
 describe('UserChip', () => {
-	it('renders a Sign in link when user is null, encoding the current path as return_url', () => {
+	it('renders a Connect with VATSIM link when user is null, encoding the current path as return_url', () => {
 		render(UserChip, {
 			user: null,
 			currentPath: '/kind',
 			identityUrl: 'https://auth.flyindycenter.com'
 		});
-		const link = screen.getByRole('link', { name: /sign in/i });
+		const link = screen.getByRole('link', { name: /connect with vatsim/i });
 		expect(link).toBeInTheDocument();
 		const href = link.getAttribute('href')!;
 		expect(href).toContain('auth.flyindycenter.com/login');
@@ -40,7 +40,7 @@ describe('UserChip', () => {
 
 	it('falls back to localhost identity URL when identityUrl prop is omitted', () => {
 		render(UserChip, { user: null, currentPath: '/' });
-		const link = screen.getByRole('link', { name: /sign in/i });
+		const link = screen.getByRole('link', { name: /connect with vatsim/i });
 		expect(link.getAttribute('href')).toContain('localhost:8787/login');
 	});
 });

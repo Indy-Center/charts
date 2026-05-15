@@ -25,6 +25,6 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<div class="flex min-h-screen w-full flex-col bg-zinc-900">
+<div class="flex min-h-screen w-full flex-col bg-zinc-950">
 	{@render children()}
 </div>
