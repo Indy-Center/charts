@@ -1,4 +1,3 @@
-import { redirect } from '@sveltejs/kit';
 import { fetchCharts } from '$lib/server/aviationapi';
 import { normalizeForApi } from '$lib/airport-id';
 import type { AirportInfo, Chart, ChartGroup, ChartsByGroup } from '$lib/types';
@@ -127,9 +126,10 @@ export async function load({ parent, fetch }) {
 	} else if (controlling) {
 		targets = pinnedAirports.airports.map((id) => ({ role: 'controlling' as const, id }));
 	} else {
-		// No flight plan and not controlling — there's nothing to put on the
-		// dashboard, so bounce back to the hero.
-		throw redirect(302, '/');
+		// No flight plan and not controlling — server has nothing to feed the
+		// chart-board, but the client may still have tracked airports to render
+		// as follower cards. Return an empty board and let the page handle it.
+		return { chartBoard: [] };
 	}
 
 	const results = await Promise.allSettled(
@@ -156,10 +156,6 @@ export async function load({ parent, fetch }) {
 		if (r.status === 'rejected') {
 			console.warn('[(landing)/dashboard/+page.server] chart-board fetch failed', r.reason);
 		}
-	}
-
-	if (chartBoard.length === 0) {
-		throw redirect(302, '/');
 	}
 
 	return { chartBoard };

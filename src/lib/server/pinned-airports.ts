@@ -10,9 +10,11 @@ export type PinnedAirports = {
 /**
  * Resolve which airports to surface on the home page for the current session.
  *
- *  - If the user is actively controlling, return the airports under their
- *    positions by walking the ZID ARTCC tree. Observer and inactive positions
- *    contribute nothing.
+ *  - If the user has an active controller session, return the airports under
+ *    their positions by walking the ZID ARTCC tree. `isObserver` and the
+ *    per-position `isActive` flag are ignored — vNAS reports `isActive=false`
+ *    while a controller is still signing in or holding a position, and we
+ *    want the dashboard to surface those airports anyway.
  *  - Otherwise, if the user has a filed VATSIM flight plan, return the
  *    departure, arrival, and (when non-empty) alternate. Flight-plan airports
  *    are taken verbatim — no tree lookup.
@@ -22,12 +24,9 @@ export type PinnedAirports = {
  * have both, but the tie-break makes the function total).
  */
 export function pinnedAirports(session: SessionContext | null, tree: Facility): PinnedAirports {
-	if (session?.activeSession && !session.activeSession.isObserver) {
+	if (session?.activeSession) {
 		const airports = new Set<string>();
 		for (const pos of session.activeSession.positions) {
-			if (!pos.isActive) {
-				continue;
-			}
 			const facility = findFacility(tree, pos.facilityId);
 			if (!facility) {
 				console.warn(`[pinned-airports] facility not in tree: ${pos.facilityId}`);

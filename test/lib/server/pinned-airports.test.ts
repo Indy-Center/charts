@@ -55,12 +55,18 @@ describe('pinnedAirports', () => {
 	});
 
 	describe('controlling-mode airports', () => {
-		it('returns [] for an observer', () => {
-			expect(pinnedAirports(withSession(observer()), zidTree).airports).toEqual([]);
+		it('still returns the position airports for an observer', () => {
+			// vNAS often reports `isObserver: false` but `isActive: false` while
+			// the controller is signing in or holding a position. We surface those
+			// airports anyway so the dashboard isn't empty.
+			expect(pinnedAirports(withSession(observer()), zidTree).airports).toEqual(['BAK', 'IND']);
 		});
 
-		it('returns [] when all positions are inactive', () => {
-			expect(pinnedAirports(withSession(inactivePosition('IND')), zidTree).airports).toEqual([]);
+		it('still returns the position airports when all positions are inactive', () => {
+			expect(pinnedAirports(withSession(inactivePosition('IND')), zidTree).airports).toEqual([
+				'BAK',
+				'IND'
+			]);
 		});
 
 		it('returns the airport plus its child ATCTs when controlling a combined AtctTracon', () => {
