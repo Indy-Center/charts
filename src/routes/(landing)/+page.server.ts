@@ -1,6 +1,6 @@
 import { fetchCharts } from '$lib/server/aviationapi';
 import { normalizeForApi } from '$lib/airport-id';
-import type { AirportInfo, Chart, ChartGroup } from '$lib/types';
+import type { AirportInfo, ChartGroup, ChartsByGroup } from '$lib/types';
 
 export type FlightChartRole = 'departure' | 'arrival' | 'alternate';
 
@@ -15,14 +15,31 @@ const ROLE_GROUPS: Record<FlightChartRole, ChartGroup[]> = {
 	alternate: ['airport_diagram', 'approach']
 };
 
-export type FlightChartEntry = { group: ChartGroup; chart: Chart };
-
 export type FlightChartSection = {
 	role: FlightChartRole;
 	filedId: string;
 	airport: AirportInfo;
-	charts: FlightChartEntry[];
+	chartsByGroup: ChartsByGroup;
 };
+
+function emptyByGroup(): ChartsByGroup {
+	return {
+		airport_diagram: [],
+		general: [],
+		approach: [],
+		departure: [],
+		arrival: []
+	};
+}
+
+function filterByRole(byGroup: ChartsByGroup, role: FlightChartRole): ChartsByGroup {
+	const allowed = new Set<ChartGroup>(ROLE_GROUPS[role]);
+	const out = emptyByGroup();
+	for (const group of allowed) {
+		out[group] = byGroup[group];
+	}
+	return out;
+}
 
 export async function load({ parent, fetch }) {
 	const { session } = await parent();
@@ -43,11 +60,12 @@ export async function load({ parent, fetch }) {
 		targets.map(async ({ role, id }): Promise<FlightChartSection> => {
 			const apiId = normalizeForApi(id) ?? id;
 			const data = await fetchCharts(apiId, fetch);
-			const groups = ROLE_GROUPS[role];
-			const charts: FlightChartEntry[] = groups.flatMap((group) =>
-				data.chartsByGroup[group].map((chart) => ({ group, chart }))
-			);
-			return { role, filedId: id, airport: data.airport, charts };
+			return {
+				role,
+				filedId: id,
+				airport: data.airport,
+				chartsByGroup: filterByRole(data.chartsByGroup, role)
+			};
 		})
 	);
 

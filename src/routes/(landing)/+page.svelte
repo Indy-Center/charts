@@ -3,18 +3,14 @@
 	import { goto } from '$app/navigation';
 	import { COMMON_AIRPORTS } from '$lib/airports';
 	import AirportSearch from '$lib/components/AirportSearch.svelte';
+	import ChartList from '$lib/components/ChartList.svelte';
 	import { chartToSlug } from '$lib/slug';
 	import { displayForm } from '$lib/airport-id';
-	import { CHART_GROUP_LABELS } from '$lib/types';
 	import type { Chart } from '$lib/types';
 
 	let { data } = $props();
 
 	const displayList = COMMON_AIRPORTS.map((icao) => icao.replace(/^K/, ''));
-
-	const pinnedLabel = $derived(
-		data.pinnedAirports.mode === 'controlling' ? 'Controlling' : 'Flying'
-	);
 
 	const ROLE_LABEL: Record<'departure' | 'arrival' | 'alternate', string> = {
 		departure: 'Departure',
@@ -35,21 +31,23 @@
 	}
 </script>
 
-<div class="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center px-4 pt-16 sm:pt-24">
+<div class="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-4 pt-16 sm:pt-24">
 	<img src="/indy-full.svg" alt="Indy Center" class="mb-8 h-10 w-auto sm:h-12" />
 
 	<p class="mb-8 text-center text-sm text-zinc-400 sm:text-base">
 		FAA terminal procedure charts for the current AIRAC cycle.
 	</p>
 
-	<div class="mb-10 w-full max-w-3xl">
+	<div class="mb-12 w-full max-w-3xl">
 		<AirportSearch onSelectAirport={pickAirport} onSelectChart={pickChart} size="lg" />
 	</div>
 
 	{#if data.pinnedAirports.mode === 'controlling' && data.pinnedAirports.airports.length > 0}
-		<section class="mb-10 w-full max-w-3xl">
-			<h2 class="mb-3 text-center text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase">
-				{pinnedLabel}
+		<section class="mb-12 w-full max-w-3xl">
+			<h2
+				class="mb-3 text-center text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase"
+			>
+				Controlling
 			</h2>
 			<nav
 				aria-label="Airports for your active session"
@@ -68,70 +66,51 @@
 	{/if}
 
 	{#if data.flightCharts}
-		<section class="mb-10 w-full" aria-label="Charts for your flight plan">
-			<h2 class="mb-4 text-center text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase">
+		<section class="mb-12 w-full" aria-label="Charts for your flight plan">
+			<h2
+				class="mb-4 text-center text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase"
+			>
 				Your flight
 			</h2>
-			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{#each data.flightCharts as section (section.role)}
 					{@const faaId = section.airport.faa_ident}
 					{@const display = displayForm(faaId, section.airport.icao_ident) || section.filedId}
-					<div class="flex flex-col rounded-lg border border-zinc-800 bg-zinc-900/60 shadow-lg">
-						<div
-							class="flex items-baseline justify-between gap-2 border-b border-zinc-800 px-4 py-3"
-						>
-							<div class="flex items-baseline gap-2">
-								<span class="text-[10px] font-semibold tracking-[0.2em] text-sky-400 uppercase">
-									{ROLE_LABEL[section.role]}
-								</span>
-								<a
-									href={`/${faaId.toLowerCase()}`}
-									class="font-mono text-base font-semibold tracking-wider text-zinc-100 hover:text-sky-300"
-								>
+					<section
+						aria-label={`${ROLE_LABEL[section.role]} ${display}`}
+						class="rounded-lg border border-zinc-800/60 bg-zinc-900/85 p-4 shadow-lg backdrop-blur-md"
+					>
+						<header class="mb-3 flex items-baseline justify-between gap-2">
+							<div class="flex min-w-0 items-baseline gap-2">
+								<span class="font-mono text-sm font-semibold tracking-wider text-zinc-100">
 									{display}
-								</a>
-							</div>
-							{#if section.airport.airport_name}
-								<span
-									class="truncate text-[10px] text-zinc-500"
-									title={section.airport.airport_name}
-								>
-									{titleCase(section.airport.airport_name)}
 								</span>
-							{/if}
-						</div>
-						{#if section.charts.length === 0}
-							<div class="px-4 py-3 text-xs text-zinc-500">No relevant charts on file.</div>
-						{:else}
-							<ul class="flex flex-col">
-								{#each section.charts as { chart, group }, i (chart.pdf_url)}
-									{@const prev = section.charts[i - 1]}
-									{@const showGroupHeader = !prev || prev.group !== group}
-									{#if showGroupHeader}
-										<li
-											class="border-t border-zinc-800/60 bg-zinc-800/30 px-4 py-1.5 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase first:border-t-0"
-										>
-											{CHART_GROUP_LABELS[group]}
-										</li>
-									{/if}
-									<li>
-										<a
-											href={`/${faaId.toLowerCase()}/${chartToSlug(chart.chart_name)}`}
-											class="block px-4 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800/60 hover:text-sky-300"
-										>
-											{chart.chart_name}
-										</a>
-									</li>
-								{/each}
-							</ul>
-						{/if}
-					</div>
+								{#if section.airport.airport_name}
+									<span class="truncate text-xs text-zinc-500">
+										{titleCase(section.airport.airport_name)}
+									</span>
+								{/if}
+							</div>
+							<span
+								class="shrink-0 text-[10px] font-semibold tracking-[0.18em] text-sky-400 uppercase"
+							>
+								{ROLE_LABEL[section.role]}
+							</span>
+						</header>
+						<ChartList
+							byGroup={section.chartsByGroup}
+							selected={null}
+							onPick={(chart) => pickChart(faaId, chart)}
+						/>
+					</section>
 				{/each}
 			</div>
 		</section>
 	{:else}
 		<section class="w-full max-w-3xl">
-			<h2 class="mb-3 text-center text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase">
+			<h2
+				class="mb-3 text-center text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase"
+			>
 				Common airports
 			</h2>
 			<nav
