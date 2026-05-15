@@ -41,8 +41,20 @@ export function towerController(facilityId: string): OnlineController {
 	};
 }
 
+export function approachController(facilityId: string): OnlineController {
+	return {
+		...towerController(facilityId),
+		positions: [
+			pos(facilityId, {
+				callsign: `${facilityId}_APP`,
+				defaultCallsign: `${facilityId}_APP`
+			})
+		]
+	};
+}
+
 export function traconController(facilityId: string): OnlineController {
-	return { ...towerController(facilityId), positions: [pos(facilityId)] };
+	return approachController(facilityId);
 }
 
 export function observer(): OnlineController {

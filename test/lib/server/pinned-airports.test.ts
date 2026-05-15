@@ -5,7 +5,7 @@ import type { SessionContext } from '@indy-center/identity';
 import { zidTree } from './__fixtures__/zid-tree';
 import {
 	towerController,
-	traconController,
+	approachController,
 	observer,
 	inactivePosition,
 	multiPosition
@@ -55,29 +55,36 @@ describe('pinnedAirports', () => {
 	});
 
 	describe('controlling-mode airports', () => {
-		it('still returns the position airports for an observer', () => {
+		it('still returns the position airport for an observer', () => {
 			// vNAS often reports `isObserver: false` but `isActive: false` while
-			// the controller is signing in or holding a position. We surface those
-			// airports anyway so the dashboard isn't empty.
-			expect(pinnedAirports(withSession(observer()), zidTree).airports).toEqual(['BAK', 'IND']);
+			// the controller is signing in or holding a position. We surface the
+			// airport anyway so the dashboard isn't empty.
+			expect(pinnedAirports(withSession(observer()), zidTree).airports).toEqual(['IND']);
 		});
 
-		it('still returns the position airports when all positions are inactive', () => {
+		it('still returns the position airport when all positions are inactive', () => {
 			expect(pinnedAirports(withSession(inactivePosition('IND')), zidTree).airports).toEqual([
-				'BAK',
 				'IND'
 			]);
 		});
 
-		it('returns the airport plus its child ATCTs when controlling a combined AtctTracon', () => {
-			// IND in the fixture is an AtctTracon with BAK as a child Atct.
+		it('returns just the airport for a tower position at a combined AtctTracon', () => {
+			// IND in the fixture is an AtctTracon with BAK as a child Atct. Tower
+			// controllers shouldn't get satellite airports.
 			expect(pinnedAirports(withSession(towerController('IND')), zidTree).airports).toEqual([
+				'IND'
+			]);
+		});
+
+		it('returns the airport plus its child ATCTs for an approach position', () => {
+			// IND_APP works traffic to the AtctTracon and the satellite Atcts.
+			expect(pinnedAirports(withSession(approachController('IND')), zidTree).airports).toEqual([
 				'BAK',
 				'IND'
 			]);
 		});
 
-		it('returns just the standalone airport when controlling a pure-tower position', () => {
+		it('returns just the standalone airport when controlling a pure-tower facility', () => {
 			// EVV in the fixture is an AtctTracon with no child Atcts.
 			expect(pinnedAirports(withSession(towerController('EVV')), zidTree).airports).toEqual([
 				'EVV'
@@ -86,15 +93,15 @@ describe('pinnedAirports', () => {
 
 		it('unions positions, deduped and sorted', () => {
 			const c = multiPosition(['IND', 'EVV', 'IND']);
-			// IND → [BAK, IND]; EVV → [EVV]. Unioned + sorted.
-			expect(pinnedAirports(withSession(c), zidTree).airports).toEqual(['BAK', 'EVV', 'IND']);
+			// All TWR — each contributes just its own airport.
+			expect(pinnedAirports(withSession(c), zidTree).airports).toEqual(['EVV', 'IND']);
 		});
 
 		it('skips positions whose facilityId is not in the tree, warns', () => {
 			const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 			const c = multiPosition(['IND', 'ZZZ']);
-			// IND yields [BAK, IND]; ZZZ logs and contributes nothing.
-			expect(pinnedAirports(withSession(c), zidTree).airports).toEqual(['BAK', 'IND']);
+			// IND yields [IND] (tower); ZZZ logs and contributes nothing.
+			expect(pinnedAirports(withSession(c), zidTree).airports).toEqual(['IND']);
 			expect(warn).toHaveBeenCalledTimes(1);
 			expect(warn.mock.calls[0]![0]).toContain('ZZZ');
 		});

@@ -1,6 +1,22 @@
 // src/lib/server/pinned-airports.ts
-import type { SessionContext } from '@indy-center/identity';
-import { collectAtctDescendants, findFacility, type Facility } from './artcc-tree';
+import type { SessionContext, VnasPosition } from '@indy-center/identity';
+import {
+	collectAtctDescendants,
+	findFacility,
+	isAirportFacility,
+	type Facility
+} from './artcc-tree';
+
+// Tower / ground / clearance-delivery / ATIS positions are scoped to a single
+// airport. Approach / departure / center walk down to all child airports
+// under the facility. Detected via the callsign suffix (e.g. CMH_E_TWR → TWR).
+const LOCAL_ONLY_SUFFIXES = new Set(['TWR', 'GND', 'DEL', 'ATIS']);
+
+function isLocalOnly(pos: VnasPosition): boolean {
+	const callsign = pos.callsign ?? pos.defaultCallsign;
+	const suffix = callsign.split('_').pop()?.toUpperCase() ?? '';
+	return LOCAL_ONLY_SUFFIXES.has(suffix);
+}
 
 export type PinnedAirports = {
 	airports: string[];
@@ -32,8 +48,16 @@ export function pinnedAirports(session: SessionContext | null, tree: Facility): 
 				console.warn(`[pinned-airports] facility not in tree: ${pos.facilityId}`);
 				continue;
 			}
-			for (const atct of collectAtctDescendants(facility)) {
-				airports.add(atct.id);
+			if (isLocalOnly(pos)) {
+				// Tower / ground / delivery: just the airport itself, not the
+				// satellite Atcts that live underneath an AtctTracon.
+				if (isAirportFacility(facility)) {
+					airports.add(facility.id);
+				}
+			} else {
+				for (const atct of collectAtctDescendants(facility)) {
+					airports.add(atct.id);
+				}
 			}
 		}
 		return { airports: [...airports].sort(), mode: 'controlling' };

@@ -84,6 +84,10 @@ export function findFacility(root: Facility, id: string): Facility | null {
 // purpose of pinning charts.
 const AIRPORT_TYPES = new Set(['Atct', 'AtctTracon']);
 
+export function isAirportFacility(f: Facility): boolean {
+	return AIRPORT_TYPES.has(f.type);
+}
+
 export function collectAtctDescendants(root: Facility): Facility[] {
 	const out: Facility[] = [];
 	function walk(f: Facility) {

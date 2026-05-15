@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { load } from '../../src/routes/+layout.server';
 import { __resetCacheForTests } from '../../src/lib/server/artcc-tree';
 import { zidTree } from '../lib/server/__fixtures__/zid-tree';
-import { towerController } from '../lib/server/__fixtures__/vnas-controllers';
+import { approachController, towerController } from '../lib/server/__fixtures__/vnas-controllers';
 import { flightPlan } from '../lib/server/__fixtures__/flight-plans';
 import type { SessionContext } from '@indy-center/identity';
 
@@ -61,10 +61,10 @@ describe('+layout.server load', () => {
 
 	it('returns controlled airports and mode: controlling for an active controller session', async () => {
 		mockTreeFetch();
-		const session = withSession(towerController('IND'), null);
+		// IND_APP is an approach position at the IND AtctTracon, so it pulls in
+		// the satellite Atct (BAK) too. A tower-only position would just be ['IND'].
+		const session = withSession(approachController('IND'), null);
 		const result = await load(makeEvent(session));
-		// IND in the zid-tree fixture is an AtctTracon with BAK as a child Atct.
-		// The pinned-airports walker collects both.
 		expect(result.pinnedAirports.airports).toEqual(['BAK', 'IND']);
 		expect(result.pinnedAirports.mode).toBe('controlling');
 	});
