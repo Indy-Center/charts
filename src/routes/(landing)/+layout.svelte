@@ -14,7 +14,10 @@
 
 <div class="flex flex-1 flex-col">
 	{#if isHero}
-		<div class="absolute top-3 right-3 z-10 sm:top-4 sm:right-4">
+		<!-- Position matches the Header's `px-3 py-2.5` so the UserChip's screen
+		     position is identical between the hero and the full-header layouts —
+		     no visible jump when navigating between / and /dashboard. -->
+		<div class="absolute top-2.5 right-3 z-10">
 			<UserChip
 				user={data.session?.user ?? null}
 				currentPath={page.url.pathname}
