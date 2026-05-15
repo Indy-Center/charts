@@ -8,6 +8,7 @@
 
 <Header
 	user={data.session?.user ?? null}
+	session={data.session}
 	currentPath={page.url.pathname}
 	identityUrl={data.identityUrl}
 />

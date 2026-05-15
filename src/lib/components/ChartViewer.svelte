@@ -39,6 +39,17 @@
 		viewStates.set(selected.pdf_url, next);
 	}
 
+	function onPageDelta(delta: number) {
+		if (!selected) {
+			return;
+		}
+		const nextPage = Math.max(1, Math.min(totalPages, currentPage + delta));
+		if (nextPage === currentPage) {
+			return;
+		}
+		viewStates.set(selected.pdf_url, { ...view, page: nextPage });
+	}
+
 	function pickChart(c: Chart, airportFaa?: string) {
 		const target = (airportFaa ?? airport.airport.faa_ident).toLowerCase();
 		const sameAirport = target === airport.airport.faa_ident.toLowerCase();
@@ -119,7 +130,7 @@
 				<ViewControls {view} onChange={onCanvasChange} />
 			</div>
 
-			<ChartMeta name={selected.chart_name} page={currentPage} {totalPages} />
+			<ChartMeta name={selected.chart_name} page={currentPage} {totalPages} {onPageDelta} />
 		{/if}
 
 		<p

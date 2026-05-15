@@ -1,17 +1,43 @@
 <script lang="ts">
 	import { createCombobox, melt } from '@melt-ui/svelte';
-	import { COMMON_AIRPORTS } from '$lib/airports';
+	import { COMMON_AIRPORTS, COMMON_AIRPORT_META } from '$lib/airports';
 	import { airportCache } from '$lib/airport-cache';
 	import { normalizeForApi, displayForm } from '$lib/airport-id';
 	import { chartToSlug } from '$lib/slug';
-	import type { AirportData, Chart } from '$lib/types';
-	import { CHART_GROUP_ORDER } from '$lib/types';
+	import type { AirportData, Chart, ChartGroup } from '$lib/types';
+	import { CHART_GROUP_LABELS, CHART_GROUP_ORDER } from '$lib/types';
 	import IconSearch from '~icons/mdi/magnify';
 	import IconClose from '~icons/mdi/close';
 
 	type Row =
-		| { kind: 'airport'; id: string; label: string; name?: string }
-		| { kind: 'chart'; airportId: string; chart: Chart };
+		| {
+				kind: 'airport';
+				id: string;
+				label: string;
+				name?: string;
+				cityState?: string;
+		  }
+		| {
+				kind: 'chart';
+				airportId: string;
+				chart: Chart;
+				group: ChartGroup;
+		  };
+
+	function titleCase(s: string): string {
+		return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+	}
+
+	function commonMeta(id: string): { name?: string; cityState?: string } {
+		const meta = COMMON_AIRPORT_META[`K${id}`] ?? COMMON_AIRPORT_META[id];
+		if (!meta) {
+			return {};
+		}
+		return {
+			name: meta.name,
+			cityState: `${meta.city}, ${meta.state}`
+		};
+	}
 
 	let {
 		onSelectAirport,
@@ -25,7 +51,7 @@
 
 	const inputClass = $derived(
 		size === 'lg'
-			? 'w-full rounded-full border border-zinc-700/40 bg-zinc-900/40 py-4 pr-16 pl-14 text-base tracking-wide text-zinc-100 uppercase shadow-xl shadow-black/40 backdrop-blur-md transition-all placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-500/40 focus:bg-zinc-900/60 focus:shadow-2xl focus:shadow-sky-500/10 focus:outline-none'
+			? 'w-full rounded-xl border border-zinc-700/50 bg-zinc-800/60 py-4 pr-16 pl-14 text-base tracking-wide text-zinc-100 uppercase shadow-lg transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-600/50 focus:bg-zinc-800/80 focus:outline-none'
 			: 'w-full rounded-md border border-zinc-700/50 bg-zinc-800/50 py-1.5 pr-12 pl-8 text-sm text-zinc-100 uppercase transition-colors placeholder:text-zinc-500 placeholder:normal-case focus:border-sky-600/50 focus:bg-zinc-800 focus:outline-none'
 	);
 
@@ -34,7 +60,7 @@
 	const trailingRightClass = $derived(size === 'lg' ? 'right-4' : 'right-2');
 	const menuClass = $derived(
 		size === 'lg'
-			? 'absolute top-full right-0 left-0 z-50 mt-2 max-h-[60vh] overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-900/95 text-sm shadow-2xl backdrop-blur-md'
+			? 'absolute top-full right-0 left-0 z-50 mt-2 max-h-[60vh] overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900/95 text-sm shadow-xl backdrop-blur-md'
 			: 'absolute top-full right-0 left-0 z-50 mt-1 max-h-[60vh] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 text-sm shadow-lg'
 	);
 
@@ -142,7 +168,16 @@
 			// isn't already in the list (so non-common airports like JFK appear).
 			const upper = id.toUpperCase();
 			const matches = COMMON_DISPLAY.filter((d) => d.startsWith(upper));
-			const out: Row[] = matches.map((d) => ({ kind: 'airport', id: d, label: d }) as Row);
+			const out: Row[] = matches.map((d) => {
+				const meta = commonMeta(d);
+				return {
+					kind: 'airport',
+					id: d,
+					label: d,
+					name: meta.name,
+					cityState: meta.cityState
+				};
+			});
 			if (
 				upper.length >= 3 &&
 				upper.length <= 4 &&
@@ -161,7 +196,7 @@
 		for (const g of CHART_GROUP_ORDER) {
 			for (const c of fetched.chartsByGroup[g]) {
 				if (chartMatchesFilter(c, filter)) {
-					charts.push({ kind: 'chart', airportId: faa, chart: c });
+					charts.push({ kind: 'chart', airportId: faa, chart: c, group: g });
 				}
 			}
 		}
@@ -295,12 +330,32 @@
 						value: row,
 						label: row.kind === 'airport' ? row.label : row.chart.chart_name
 					})}
-					class="cursor-pointer px-3 py-1.5 text-zinc-200 data-[highlighted]:bg-sky-500/15 data-[highlighted]:text-sky-100"
+					class="flex cursor-pointer items-baseline gap-3 px-3 py-1.5 text-zinc-200 data-[highlighted]:bg-sky-500/15 data-[highlighted]:text-sky-100"
 				>
 					{#if row.kind === 'airport'}
-						<span class="font-medium tracking-wide">{row.label}</span>
+						<span
+							class="w-12 shrink-0 font-mono text-sm font-semibold tracking-wider text-zinc-100"
+						>
+							{row.label}
+						</span>
+						<span class="flex-1 truncate text-sm">
+							{row.name ?? ''}
+						</span>
+						{#if row.cityState}
+							<span class="shrink-0 text-xs text-zinc-500">{row.cityState}</span>
+						{/if}
 					{:else}
-						<span>{row.chart.chart_name}</span>
+						<span
+							class="w-12 shrink-0 font-mono text-sm font-semibold tracking-wider text-zinc-100"
+						>
+							{row.airportId}
+						</span>
+						<span class="flex-1 truncate text-sm">{row.chart.chart_name}</span>
+						<span
+							class="shrink-0 rounded bg-zinc-800/70 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase"
+						>
+							{CHART_GROUP_LABELS[row.group]}
+						</span>
 					{/if}
 				</li>
 			{:else}

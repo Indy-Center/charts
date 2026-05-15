@@ -1,6 +1,8 @@
 <!-- src/lib/components/UserChip.svelte -->
 <script lang="ts">
 	import type { User } from '@indy-center/identity';
+	import IconLogout from '~icons/mdi/logout';
+	import IconLogin from '~icons/mdi/login';
 
 	let {
 		user,
@@ -30,20 +32,21 @@
 </script>
 
 {#if user}
-	<div class="flex items-center gap-2 text-sm text-zinc-300">
-		<span class="hidden sm:inline">{displayName}</span>
-		<a
-			href={logoutHref}
-			class="cursor-pointer rounded-md border border-zinc-700 bg-zinc-800/50 px-2 py-1 text-xs text-gray-400 transition-all hover:border-zinc-600 hover:bg-zinc-800 hover:text-gray-300 active:scale-95"
-		>
-			Sign out
-		</a>
-	</div>
+	<a
+		href={logoutHref}
+		aria-label={`Sign out (${displayName})`}
+		title="Sign out"
+		class="flex shrink-0 cursor-pointer items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800/50 px-2.5 py-1.5 text-sm text-zinc-300 transition-all hover:border-zinc-600 hover:bg-zinc-800 hover:text-zinc-100 active:scale-95"
+	>
+		<span class="hidden max-w-[10rem] truncate sm:inline">{displayName}</span>
+		<IconLogout class="text-base text-zinc-500" />
+	</a>
 {:else}
 	<a
 		href={loginHref}
-		class="cursor-pointer rounded-md border border-zinc-700 bg-zinc-800/50 px-3 py-1.5 text-sm text-gray-300 transition-all hover:border-sky-600/50 hover:bg-zinc-800 hover:text-sky-300 active:scale-95"
+		class="flex shrink-0 cursor-pointer items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800/50 px-3 py-1.5 text-sm text-zinc-300 transition-all hover:border-sky-600/50 hover:bg-zinc-800 hover:text-sky-300 active:scale-95"
 	>
-		Sign in
+		<IconLogin class="text-base" />
+		<span class="hidden sm:inline">Sign in</span>
 	</a>
 {/if}

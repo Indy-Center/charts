@@ -158,7 +158,7 @@
 	{#if collapsed}
 		{#if effectivePins.length > 0}
 			<div class="flex flex-wrap gap-1 border-t border-zinc-800/60 px-3 py-2">
-				{#each effectivePins as chart (chart.pdf_url)}
+				{#each effectivePins as chart (`${chart.chart_name}:${chart.pdf_url}`)}
 					{@const isSelected =
 						!!selected &&
 						chart.chart_name === selected.chart_name &&
@@ -190,7 +190,7 @@
 							{CHART_GROUP_LABELS[group]}
 						</h3>
 						<ul class="flex flex-col gap-0.5">
-							{#each chartsByGroup[group] as chart (chart.pdf_url)}
+							{#each chartsByGroup[group] as chart (`${chart.chart_name}:${chart.pdf_url}`)}
 								{@const isSelected =
 									!!selected &&
 									chart.chart_name === selected.chart_name &&
