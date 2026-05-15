@@ -6,7 +6,11 @@
 	let { data, children } = $props();
 </script>
 
-<Header user={data.session?.user ?? null} currentPath={page.url.pathname} />
+<Header
+	user={data.session?.user ?? null}
+	currentPath={page.url.pathname}
+	identityUrl={data.identityUrl}
+/>
 <div class="flex min-h-0 flex-1 flex-col">
 	{@render children()}
 </div>

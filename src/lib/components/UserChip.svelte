@@ -2,18 +2,26 @@
 <script lang="ts">
 	import type { User } from '@indy-center/identity';
 
-	let { user, currentPath = '/' }: { user: User | null; currentPath?: string } = $props();
+	let {
+		user,
+		currentPath = '/',
+		identityUrl = 'http://localhost:8787'
+	}: {
+		user: User | null;
+		currentPath?: string;
+		identityUrl?: string;
+	} = $props();
 
-	const SITE_ORIGIN = 'https://charts.flyindycenter.com';
-	const IDENTITY_LOGIN = 'https://identity.flyindycenter.com/login';
-	const IDENTITY_LOGOUT = 'https://identity.flyindycenter.com/logout';
-
-	const returnUrl = $derived(`${SITE_ORIGIN}${currentPath}`);
-	const loginHref = $derived(`${IDENTITY_LOGIN}?return_url=${encodeURIComponent(returnUrl)}`);
-	const logoutHref = $derived(`${IDENTITY_LOGOUT}?return_url=${encodeURIComponent(returnUrl)}`);
+	const returnUrl = $derived(
+		typeof window === 'undefined' ? currentPath : `${window.location.origin}${currentPath}`
+	);
+	const loginHref = $derived(`${identityUrl}/login?return_url=${encodeURIComponent(returnUrl)}`);
+	const logoutHref = $derived(`${identityUrl}/logout?return_url=${encodeURIComponent(returnUrl)}`);
 
 	const displayName = $derived.by(() => {
-		if (!user) return '';
+		if (!user) {
+			return '';
+		}
 		const first = user.vatsimData?.personal?.name_first;
 		const last = user.vatsimData?.personal?.name_last;
 		const full = user.vatsimData?.personal?.name_full;

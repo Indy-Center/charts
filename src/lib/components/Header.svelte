@@ -10,10 +10,12 @@
 	let {
 		user,
 		currentPath = '/',
+		identityUrl,
 		actions
 	}: {
 		user: User | null;
 		currentPath?: string;
+		identityUrl?: string;
 		actions?: Snippet;
 	} = $props();
 
@@ -45,6 +47,6 @@
 			{@render actions()}
 		{/if}
 
-		<UserChip {user} {currentPath} />
+		<UserChip {user} {currentPath} {identityUrl} />
 	</div>
 </div>

@@ -12,6 +12,9 @@
 	"observability": {
 		"enabled": true
 	},
+	"vars": {
+		"PUBLIC_IDENTITY_URL": "https://auth.flyindycenter.com"
+	},
 	"routes": [{ "pattern": "charts.flyindycenter.com", "custom_domain": true }],
 	"services": [
 		// Identity worker binding is declared but unused in v1.

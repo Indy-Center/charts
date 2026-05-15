@@ -11,10 +11,18 @@
 
 <div class="flex flex-1 flex-col">
 	{#if hasActiveMode}
-		<Header user={data.session?.user ?? null} currentPath={page.url.pathname} />
+		<Header
+			user={data.session?.user ?? null}
+			currentPath={page.url.pathname}
+			identityUrl={data.identityUrl}
+		/>
 	{:else}
 		<div class="absolute top-3 right-3 z-10 sm:top-4 sm:right-4">
-			<UserChip user={data.session?.user ?? null} currentPath={page.url.pathname} />
+			<UserChip
+				user={data.session?.user ?? null}
+				currentPath={page.url.pathname}
+				identityUrl={data.identityUrl}
+			/>
 		</div>
 	{/if}
 

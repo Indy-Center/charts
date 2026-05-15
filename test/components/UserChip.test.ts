@@ -5,12 +5,17 @@ import UserChip from '$lib/components/UserChip.svelte';
 
 describe('UserChip', () => {
 	it('renders a Sign in link when user is null, encoding the current path as return_url', () => {
-		render(UserChip, { user: null, currentPath: '/kind' });
+		render(UserChip, {
+			user: null,
+			currentPath: '/kind',
+			identityUrl: 'https://auth.flyindycenter.com'
+		});
 		const link = screen.getByRole('link', { name: /sign in/i });
 		expect(link).toBeInTheDocument();
 		const href = link.getAttribute('href')!;
-		expect(href).toContain('identity.flyindycenter.com/login');
-		expect(href).toContain(encodeURIComponent('https://charts.flyindycenter.com/kind'));
+		expect(href).toContain('auth.flyindycenter.com/login');
+		expect(href).toContain('return_url=');
+		expect(href).toContain(encodeURIComponent('/kind'));
 	});
 
 	it("renders the user's name and a Sign out link when user is present", () => {
@@ -25,10 +30,17 @@ describe('UserChip', () => {
 				createdAt: 0,
 				updatedAt: 0
 			},
-			currentPath: '/'
+			currentPath: '/',
+			identityUrl: 'https://auth.flyindycenter.com'
 		});
 		expect(screen.getByText(/pat/i)).toBeInTheDocument();
 		const out = screen.getByRole('link', { name: /sign out/i });
-		expect(out.getAttribute('href')).toContain('identity.flyindycenter.com/logout');
+		expect(out.getAttribute('href')).toContain('auth.flyindycenter.com/logout');
+	});
+
+	it('falls back to localhost identity URL when identityUrl prop is omitted', () => {
+		render(UserChip, { user: null, currentPath: '/' });
+		const link = screen.getByRole('link', { name: /sign in/i });
+		expect(link.getAttribute('href')).toContain('localhost:8787/login');
 	});
 });
