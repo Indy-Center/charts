@@ -1,1 +1,84 @@
-{"airport_data":{"city":"BATAVIA","state_abbr":"OH","state_full":"OHIO","country":"USA","faa_ident":"I69","airport_name":"CLERMONT COUNTY","is_military":false},"charts":{"airport_diagram":[],"general":[{"chart_name":"TAKEOFF MINIMUMS","chart_sequence":"10100","pdf_name":"ec2to.pdf","pdf_url":"https://charts-v2.aviationapi.com/260416/ec2to.pdf","did_change":false},{"chart_name":"ALTERNATE MINIMUMS","chart_sequence":"10200","pdf_name":"ec2alt.pdf","pdf_url":"https://charts-v2.aviationapi.com/260416/ec2alt.pdf","did_change":false}],"departure":[],"arrival":[{"chart_name":"CEGRM EIGHT (RNAV)","chart_sequence":"30000","pdf_name":"00655cegrm.pdf","pdf_url":"https://charts-v2.aviationapi.com/260416/00655cegrm.pdf","did_change":false},{"chart_name":"GAVNN EIGHT (RNAV)","chart_sequence":"30000","pdf_name":"00655gavnn.pdf","pdf_url":"https://charts-v2.aviationapi.com/260416/00655gavnn.pdf","did_change":false},{"chart_name":"HEDEE ONE (RNAV)","chart_sequence":"30000","pdf_name":"00083hedee.pdf","pdf_url":"https://charts-v2.aviationapi.com/260416/00083hedee.pdf","did_change":false},{"chart_name":"JAKIE SEVEN (RNAV)","chart_sequence":"30000","pdf_name":"00655jakie.pdf","pdf_url":"https://charts-v2.aviationapi.com/260416/00655jakie.pdf","did_change":false},{"chart_name":"SARGO FIVE (RNAV)","chart_sequence":"30000","pdf_name":"00655sargo.pdf","pdf_url":"https://charts-v2.aviationapi.com/260416/00655sargo.pdf","did_change":false}],"approach":[{"chart_name":"RNAV (GPS) RWY 04","chart_sequence":"53525","pdf_name":"05955r4.pdf","pdf_url":"https://charts-v2.aviationapi.com/260416/05955r4.pdf","did_change":false},{"chart_name":"RNAV (GPS) RWY 22","chart_sequence":"53525","pdf_name":"05955r22.pdf","pdf_url":"https://charts-v2.aviationapi.com/260416/05955r22.pdf","did_change":false}]}}
+{
+	"airport_data": {
+		"city": "BATAVIA",
+		"state_abbr": "OH",
+		"state_full": "OHIO",
+		"country": "USA",
+		"faa_ident": "I69",
+		"airport_name": "CLERMONT COUNTY",
+		"is_military": false
+	},
+	"charts": {
+		"airport_diagram": [],
+		"general": [
+			{
+				"chart_name": "TAKEOFF MINIMUMS",
+				"chart_sequence": "10100",
+				"pdf_name": "ec2to.pdf",
+				"pdf_url": "https://charts-v2.aviationapi.com/260416/ec2to.pdf",
+				"did_change": false
+			},
+			{
+				"chart_name": "ALTERNATE MINIMUMS",
+				"chart_sequence": "10200",
+				"pdf_name": "ec2alt.pdf",
+				"pdf_url": "https://charts-v2.aviationapi.com/260416/ec2alt.pdf",
+				"did_change": false
+			}
+		],
+		"departure": [],
+		"arrival": [
+			{
+				"chart_name": "CEGRM EIGHT (RNAV)",
+				"chart_sequence": "30000",
+				"pdf_name": "00655cegrm.pdf",
+				"pdf_url": "https://charts-v2.aviationapi.com/260416/00655cegrm.pdf",
+				"did_change": false
+			},
+			{
+				"chart_name": "GAVNN EIGHT (RNAV)",
+				"chart_sequence": "30000",
+				"pdf_name": "00655gavnn.pdf",
+				"pdf_url": "https://charts-v2.aviationapi.com/260416/00655gavnn.pdf",
+				"did_change": false
+			},
+			{
+				"chart_name": "HEDEE ONE (RNAV)",
+				"chart_sequence": "30000",
+				"pdf_name": "00083hedee.pdf",
+				"pdf_url": "https://charts-v2.aviationapi.com/260416/00083hedee.pdf",
+				"did_change": false
+			},
+			{
+				"chart_name": "JAKIE SEVEN (RNAV)",
+				"chart_sequence": "30000",
+				"pdf_name": "00655jakie.pdf",
+				"pdf_url": "https://charts-v2.aviationapi.com/260416/00655jakie.pdf",
+				"did_change": false
+			},
+			{
+				"chart_name": "SARGO FIVE (RNAV)",
+				"chart_sequence": "30000",
+				"pdf_name": "00655sargo.pdf",
+				"pdf_url": "https://charts-v2.aviationapi.com/260416/00655sargo.pdf",
+				"did_change": false
+			}
+		],
+		"approach": [
+			{
+				"chart_name": "RNAV (GPS) RWY 04",
+				"chart_sequence": "53525",
+				"pdf_name": "05955r4.pdf",
+				"pdf_url": "https://charts-v2.aviationapi.com/260416/05955r4.pdf",
+				"did_change": false
+			},
+			{
+				"chart_name": "RNAV (GPS) RWY 22",
+				"chart_sequence": "53525",
+				"pdf_name": "05955r22.pdf",
+				"pdf_url": "https://charts-v2.aviationapi.com/260416/05955r22.pdf",
+				"did_change": false
+			}
+		]
+	}
+}

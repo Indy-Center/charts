@@ -70,8 +70,14 @@ describe('ChartCanvas', () => {
 	});
 
 	it('jumps to the page containing the airport ident for minimums docs', async () => {
-		const loader = vi.fn(async () =>
-			makeFakeDoc(['ALABAMA stuff', 'CALIFORNIA stuff', 'INDIANAPOLIS IND charts here', 'OHIO stuff']) as any
+		const loader = vi.fn(
+			async () =>
+				makeFakeDoc([
+					'ALABAMA stuff',
+					'CALIFORNIA stuff',
+					'INDIANAPOLIS IND charts here',
+					'OHIO stuff'
+				]) as any
 		);
 		const onPageInfo = vi.fn();
 		render(ChartCanvas, {
@@ -89,8 +95,8 @@ describe('ChartCanvas', () => {
 	});
 
 	it('does not smart-detect for non-minimums charts', async () => {
-		const loader = vi.fn(async () =>
-			makeFakeDoc(['IND stuff', 'IND stuff again', 'IND stuff yet again']) as any
+		const loader = vi.fn(
+			async () => makeFakeDoc(['IND stuff', 'IND stuff again', 'IND stuff yet again']) as any
 		);
 		const onPageInfo = vi.fn();
 		render(ChartCanvas, {

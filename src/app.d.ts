@@ -1,13 +1,17 @@
 /// <reference types="unplugin-icons/types/svelte" />
 
+import type { IdentityBinding, SessionContext } from '@indy-center/identity';
+
 declare global {
 	namespace App {
 		// interface Error {}
-		// interface Locals {}
+		interface Locals {
+			session: SessionContext | null;
+		}
 		// interface PageData {}
 		// interface PageState {}
 		interface Platform {
-			env: Cloudflare.Env;
+			env: Omit<Cloudflare.Env, 'IDENTITY'> & { IDENTITY?: IdentityBinding };
 			cf: CfProperties;
 			ctx: ExecutionContext;
 		}

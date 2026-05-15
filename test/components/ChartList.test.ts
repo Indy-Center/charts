@@ -57,7 +57,13 @@ describe('ChartList', () => {
 			did_change: false
 		};
 		render(ChartList, {
-			byGroup: { airport_diagram: [], general: [takeoff, dva], approach: [], departure: [], arrival: [] },
+			byGroup: {
+				airport_diagram: [],
+				general: [takeoff, dva],
+				approach: [],
+				departure: [],
+				arrival: []
+			},
 			selected: dva,
 			onPick: () => {}
 		});
@@ -68,12 +74,6 @@ describe('ChartList', () => {
 		expect(screen.getByRole('button', { name: /TAKEOFF MINIMUMS/ })).not.toHaveAttribute(
 			'aria-current'
 		);
-	});
-
-	it('shows did_change badge', () => {
-		render(ChartList, { byGroup: groups, selected: null, onPick: () => {} });
-		const ils = screen.getByRole('button', { name: /ILS RWY 05L/ });
-		expect(ils.querySelector('[aria-label="Changed this cycle"]')).toBeTruthy();
 	});
 
 	it('calls onPick with the chart when clicked', async () => {

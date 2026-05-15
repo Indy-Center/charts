@@ -1,0 +1,169 @@
+import { fetchCharts } from '$lib/server/aviationapi';
+import { normalizeForApi } from '$lib/airport-id';
+import type { AirportData, Chart } from '$lib/types';
+import type { PinboardEntry, PinboardRole } from '$lib/pinboard';
+
+function normalize(id: string): string {
+	return id.replace(/^K/i, '').toUpperCase();
+}
+
+const DIGIT_TO_WORD = [
+	'ZERO',
+	'ONE',
+	'TWO',
+	'THREE',
+	'FOUR',
+	'FIVE',
+	'SIX',
+	'SEVEN',
+	'EIGHT',
+	'NINE'
+] as const;
+
+// Match a route token like `SPILR1` to a chart name like `SPILR ONE (RNAV)`.
+function matchProcedureChart(charts: Chart[], routeToken: string): Chart | null {
+	const m = routeToken.match(/^([A-Z]+?)(\d+)?$/);
+	if (!m) {
+		return null;
+	}
+	const prefix = m[1]!;
+	const digitStr = m[2];
+	if (digitStr && digitStr.length === 1) {
+		const word = DIGIT_TO_WORD[Number(digitStr)];
+		const target = `${prefix} ${word}`;
+		const exact = charts.find((c) => c.chart_name.toUpperCase().startsWith(target));
+		if (exact) {
+			return exact;
+		}
+	}
+	return charts.find((c) => c.chart_name.toUpperCase().startsWith(`${prefix} `)) ?? null;
+}
+
+function defaultPinsFor(
+	role: PinboardRole,
+	airport: AirportData,
+	sidToken: string | null,
+	starToken: string | null
+): Chart[] {
+	const pins: Chart[] = [];
+	// Airport diagram is always a high-confidence default.
+	pins.push(...airport.chartsByGroup.airport_diagram);
+	if (role === 'departure' && sidToken) {
+		const sid = matchProcedureChart(airport.chartsByGroup.departure, sidToken);
+		if (sid) {
+			pins.push(sid);
+		}
+	}
+	if (role === 'arrival' && starToken) {
+		const star = matchProcedureChart(airport.chartsByGroup.arrival, starToken);
+		if (star) {
+			pins.push(star);
+		}
+	}
+	// Alternate and controlling get just the airport diagram by default — we're
+	// not confident enough to auto-pin specific approaches.
+	return pins;
+}
+
+function parseRouteEndpoints(route: string | undefined): {
+	first: string | null;
+	last: string | null;
+} {
+	if (!route) {
+		return { first: null, last: null };
+	}
+	const tokens = route
+		.trim()
+		.split(/\s+/)
+		.filter((t) => t.length > 0);
+	if (tokens.length === 0) {
+		return { first: null, last: null };
+	}
+	if (tokens.length === 1) {
+		return { first: tokens[0]!, last: null };
+	}
+	return { first: tokens[0]!, last: tokens[tokens.length - 1]! };
+}
+
+export async function load({ parent, params, fetch }) {
+	const parentData = await parent();
+	const session = parentData.session;
+	const currentKey = normalize(params.airport);
+
+	// Build the canonical ordered list of pinboard slots — plan/controlling
+	// only. Anything else (the current airport when off-context, user-pinned
+	// follower airports) gets rendered client-side in a single alphabetised
+	// follower row so card positions don't reshuffle as the user navigates or
+	// pins/unpins.
+	type Slot = { id: string; role: PinboardRole };
+	const slots: Slot[] = [];
+	const seen = new Set<string>();
+	const add = (id: string | undefined, role: PinboardRole) => {
+		if (!id) {
+			return;
+		}
+		const trimmed = id.trim();
+		if (!trimmed) {
+			return;
+		}
+		const key = normalize(trimmed);
+		if (seen.has(key)) {
+			return;
+		}
+		seen.add(key);
+		slots.push({ id: trimmed, role });
+	};
+
+	let sidToken: string | null = null;
+	let starToken: string | null = null;
+	if (session?.activeFlightPlan) {
+		const fp = session.activeFlightPlan;
+		({ first: sidToken, last: starToken } = parseRouteEndpoints(fp.route));
+		add(fp.departure, 'departure');
+		add(fp.arrival, 'arrival');
+		add(fp.alternate, 'alternate');
+	} else if (
+		parentData.pinnedAirports.mode === 'controlling' &&
+		parentData.pinnedAirports.airports.length > 0
+	) {
+		const sorted = [...parentData.pinnedAirports.airports].sort();
+		for (const id of sorted) {
+			add(id, 'controlling');
+		}
+	}
+
+	if (slots.length === 0) {
+		return { pinboard: [] as PinboardEntry[] };
+	}
+
+	// Fetch chart data for EVERY slot, including the current airport. This
+	// duplicates the universal +layout.ts's fetch for the current airport, but
+	// the benefit is that the current airport's pinboard entry has real chart
+	// data + computed defaultPins (matched SID/STAR, airport diagram). The
+	// alternative — computing defaultPins client-side — would require leaking
+	// route tokens through the data flow.
+	const results = await Promise.allSettled(
+		slots.map(async ({ id, role }): Promise<PinboardEntry> => {
+			const apiId = normalizeForApi(id) ?? id;
+			const data = await fetchCharts(apiId, fetch);
+			return {
+				id,
+				role,
+				airport: data,
+				defaultPins: defaultPinsFor(role, data, sidToken, starToken),
+				isCurrent: normalize(id) === currentKey
+			};
+		})
+	);
+
+	const pinboard: PinboardEntry[] = [];
+	for (const r of results) {
+		if (r.status === 'fulfilled') {
+			pinboard.push(r.value);
+		} else {
+			console.warn('[(viewer) pinboard] fetch failed', r.reason);
+		}
+	}
+
+	return { pinboard };
+}
