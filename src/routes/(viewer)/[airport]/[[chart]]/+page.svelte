@@ -53,7 +53,8 @@
 
 	let pageTitle = $derived.by(() => {
 		const id = displayForm(data.airport.airport.faa_ident, data.airport.airport.icao_ident);
-		return data.selected ? `${id} — ${data.selected.chart_name}` : id;
+		const head = data.selected ? `${id} · ${data.selected.chart_name}` : id;
+		return `${head} — Indy Center Charts`;
 	});
 </script>
 

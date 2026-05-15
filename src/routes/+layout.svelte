@@ -25,6 +25,12 @@
 
 <svelte:window onkeydown={onKeydown} />
 
+<!-- Default title for any page that doesn't override it. Pages can replace
+     this with their own <svelte:head><title>...</title></svelte:head>. -->
+<svelte:head>
+	<title>Indy Center Charts</title>
+</svelte:head>
+
 <div class="flex min-h-screen w-full flex-col bg-zinc-950">
 	{@render children()}
 </div>

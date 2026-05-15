@@ -33,6 +33,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Dashboard — Indy Center Charts</title>
+</svelte:head>
+
 <!-- No heading — the active flight / controlling context is already shown in
      the header status pill. The dashboard is an overview, so cards default to
      collapsed (pins-only) and the user expands what they care about. -->

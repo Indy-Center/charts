@@ -9,6 +9,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{heading} — Indy Center Charts</title>
+</svelte:head>
+
 <main
 	class="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-3 px-4 text-center"
 >
